@@ -89,6 +89,8 @@ Thumbs.db
 /storage/framework/cache/data/
 /storage/framework/sessions/
 /storage/framework/views/
+!/storage/framework/views/
+!/storage/framework/views/.gitignore
 /bootstrap/cache/*.php
 /vendor/
 _ide_helper.php
