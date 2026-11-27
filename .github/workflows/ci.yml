@@ -1,19 +1,47 @@
-name: Backend CI
+name: ViCarTech CI
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [develop, test, release, main]
   push:
-    branches: [main, master]
+    branches:
+      - develop
+      - test
+      - release
+      - main
+      - 'feature/**'
+      - 'fix/**'
+      - 'hotfix/**'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    name: Laravel tests (${{ matrix.component }})
-    runs-on: ubuntu-latest
+  branch-context:
+    name: Resolve promotion target
+    runs-on: ubuntu-24.04
+    outputs:
+      target_branch: ${{ steps.target.outputs.branch }}
+    steps:
+      - name: Resolve the protected destination branch
+        id: target
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            target_branch=main
+          elif [[ -n "$GITHUB_BASE_REF" ]]; then
+            target_branch="$GITHUB_BASE_REF"
+          else
+            target_branch="$GITHUB_REF_NAME"
+          fi
+          printf 'branch=%s\n' "$target_branch" >> "$GITHUB_OUTPUT"
+
+  composer-validation:
+    name: Composer validation (${{ matrix.component }})
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -26,18 +54,457 @@ jobs:
           - inventory-service
           - billing-service
           - accounting-service
+    defaults:
+      run:
+        working-directory: ${{ matrix.component == 'root' && '.' || format('services/{0}', matrix.component) }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
         with:
           persist-credentials: false
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
           php-version: '8.3'
-          extensions: bcmath, intl, mbstring, pdo_mysql, pdo_sqlite, zip
+          extensions: bcmath, intl, mbstring, openssl, pdo_mysql, pdo_sqlite, zip
           coverage: none
+      - name: Validate Composer manifest and locked platform requirements
+        run: |
+          composer validate --strict --no-check-publish
+          composer check-platform-reqs --lock --no-dev
+
+  laravel-tests:
+    name: Laravel tests (${{ matrix.component }})
+    needs: [branch-context, composer-validation]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - root
+          - auth-service
+          - clients-service
+          - appointments-service
+          - interventions-service
+          - inventory-service
+          - billing-service
+          - accounting-service
+    defaults:
+      run:
+        working-directory: ${{ matrix.component == 'root' && '.' || format('services/{0}', matrix.component) }}
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      DB_URL: ''
+      DB_HOST: 127.0.0.1
+      DB_PORT: '1'
+      DB_USERNAME: vicartech_ci
+      DB_PASSWORD: ''
+      MAIL_MAILER: array
+      MAIL_URL: ''
+      MAIL_HOST: 127.0.0.1
+      MAIL_PORT: '1'
+      MAIL_USERNAME: ''
+      MAIL_PASSWORD: ''
+      TWILIO_ACCOUNT_SID: ''
+      TWILIO_AUTH_TOKEN: ''
+      TWILIO_FROM_NUMBER: ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, intl, mbstring, openssl, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+      - name: Verify PHP extensions and SQLite driver
+        run: |
+          php -r '
+          $requiredExtensions = ["bcmath", "intl", "mbstring", "openssl", "pdo_mysql", "pdo_sqlite", "zip"];
+          $missingExtensions = array_values(array_filter($requiredExtensions, fn ($extension) => ! extension_loaded($extension)));
+          if ($missingExtensions !== [] || ! in_array("sqlite", PDO::getAvailableDrivers(), true)) {
+              fwrite(STDERR, "Missing required PHP extensions or SQLite PDO driver: ".implode(", ", $missingExtensions)."\n");
+              exit(1);
+          }
+          echo "Required PHP extensions and SQLite PDO driver are available.\n";
+          '
+      - name: Verify PHPUnit isolation configuration
+        run: |
+          python3 - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ElementTree
+
+          expected_values = {
+              "APP_ENV": "testing",
+              "DB_CONNECTION": "sqlite",
+              "DB_DATABASE": ":memory:",
+              "DB_URL": "",
+              "MAIL_MAILER": "array",
+              "QUEUE_CONNECTION": "sync",
+              "SESSION_DRIVER": "array",
+          }
+          document = ElementTree.parse("phpunit.xml")
+          configured_values = {
+              setting.attrib.get("name"): setting
+              for setting in document.findall("./php/env")
+          }
+          failures = []
+          for name, expected_value in expected_values.items():
+              setting = configured_values.get(name)
+              if setting is None or setting.attrib.get("value") != expected_value:
+                  failures.append(f"{name} must be {expected_value!r}")
+              elif setting.attrib.get("force") != "true":
+                  failures.append(f"{name} must use force=true")
+          if failures:
+              print("Invalid phpunit.xml isolation settings:", *failures, sep="\n- ", file=sys.stderr)
+              sys.exit(1)
+          print("PHPUnit forces SQLite, array mail, synchronous queue, and array sessions.")
+          PY
+      - name: Create an isolated Laravel environment
+        run: |
+          test -f .env.example
+          cp .env.example .env
+          chmod 0600 .env
       - name: Install Composer dependencies
-        working-directory: ${{ matrix.component == 'root' && '.' || format('services/{0}', matrix.component) }}
         run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Run Laravel tests
+      - name: Generate a job-specific temporary APP_KEY
+        run: php artisan key:generate --force
+      - name: Export and mask the temporary APP_KEY
+        run: |
+          temporary_app_key="$(php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $environment = Dotenv\Dotenv::parse(file_get_contents('.env'));
+          echo $environment['APP_KEY'] ?? '';
+          PHP
+          )"
+          test -n "$temporary_app_key"
+          printf '::add-mask::%s\n' "$temporary_app_key"
+          printf 'APP_KEY=%s\n' "$temporary_app_key" >> "$GITHUB_ENV"
+      - name: Clear cached configuration
+        run: php artisan config:clear
+      - name: Run the complete Laravel suite
+        run: php artisan test --display-warnings
+
+  gitleaks:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install verified Gitleaks release
+        shell: bash
+        run: |
+          archive_file="$RUNNER_TEMP/gitleaks_8.30.1_linux_x64.tar.gz"
+          curl --fail --silent --show-error --location \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            --output "$archive_file"
+          printf '%s  %s\n' \
+            '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' \
+            "$archive_file" | sha256sum --check --status
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          tar -xzf "$archive_file" -C "$RUNNER_TEMP/gitleaks" gitleaks
+          "$RUNNER_TEMP/gitleaks/gitleaks" version
+      - name: Scan the full Git history with redaction
+        run: "$RUNNER_TEMP/gitleaks/gitleaks git . --redact=100 --no-banner"
+      - name: Scan the checked-out files with redaction
+        run: "$RUNNER_TEMP/gitleaks/gitleaks dir . --redact=100 --no-banner"
+
+  security-tests:
+    name: Security tests (${{ matrix.component }})
+    needs: [branch-context, composer-validation]
+    if: ${{ contains(fromJSON('["test","release","main"]'), needs.branch-context.outputs.target_branch) }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - root
+          - auth-service
+          - clients-service
+          - appointments-service
+          - interventions-service
+          - inventory-service
+          - billing-service
+          - accounting-service
+    defaults:
+      run:
         working-directory: ${{ matrix.component == 'root' && '.' || format('services/{0}', matrix.component) }}
-        run: php artisan test
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      DB_URL: ''
+      DB_HOST: 127.0.0.1
+      DB_PORT: '1'
+      DB_USERNAME: vicartech_ci
+      DB_PASSWORD: ''
+      MAIL_MAILER: array
+      MAIL_URL: ''
+      MAIL_HOST: 127.0.0.1
+      MAIL_PORT: '1'
+      MAIL_USERNAME: ''
+      MAIL_PASSWORD: ''
+      TWILIO_ACCOUNT_SID: ''
+      TWILIO_AUTH_TOKEN: ''
+      TWILIO_FROM_NUMBER: ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, intl, mbstring, openssl, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+      - name: Create an isolated Laravel environment
+        run: |
+          test -f .env.example
+          cp .env.example .env
+          chmod 0600 .env
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Generate a job-specific temporary APP_KEY
+        run: php artisan key:generate --force
+      - name: Export and mask the temporary APP_KEY
+        run: |
+          temporary_app_key="$(php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $environment = Dotenv\Dotenv::parse(file_get_contents('.env'));
+          echo $environment['APP_KEY'] ?? '';
+          PHP
+          )"
+          test -n "$temporary_app_key"
+          printf '::add-mask::%s\n' "$temporary_app_key"
+          printf 'APP_KEY=%s\n' "$temporary_app_key" >> "$GITHUB_ENV"
+      - name: Run authentication, session, CSRF, and company-boundary tests
+        run: php artisan test --display-warnings --filter='Security|Session|Company'
+
+  mariadb-validation:
+    name: MariaDB migration and integration tests (${{ matrix.component }})
+    needs: [branch-context, composer-validation]
+    if: ${{ contains(fromJSON('["test","release","main"]'), needs.branch-context.outputs.target_branch) }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - auth-service
+          - clients-service
+          - appointments-service
+          - interventions-service
+          - inventory-service
+          - billing-service
+          - accounting-service
+    defaults:
+      run:
+        working-directory: services/${{ matrix.component }}
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+          MARIADB_ROOT_HOST: '%'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 -uroot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    env:
+      APP_ENV: testing
+      MAIL_MAILER: array
+      MAIL_USERNAME: ''
+      MAIL_PASSWORD: ''
+      TWILIO_ACCOUNT_SID: ''
+      TWILIO_AUTH_TOKEN: ''
+      TWILIO_FROM_NUMBER: ''
+      LOT1_MARIADB_ENABLED: 'true'
+      LOT1_MARIADB_HOST: 127.0.0.1
+      LOT1_MARIADB_PORT: '3306'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, intl, mbstring, openssl, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+      - name: Verify MariaDB PDO support
+        run: |
+          php -r '
+          if (! extension_loaded("pdo_mysql") || ! in_array("mysql", PDO::getAvailableDrivers(), true)) {
+              fwrite(STDERR, "The MariaDB PDO driver is required.\n");
+              exit(1);
+          }
+          '
+      - name: Create an isolated Laravel environment
+        run: |
+          test -f .env.example
+          cp .env.example .env
+          chmod 0600 .env
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Generate a job-specific temporary APP_KEY
+        run: php artisan key:generate --force
+      - name: Export and mask the temporary APP_KEY
+        run: |
+          temporary_app_key="$(php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $environment = Dotenv\Dotenv::parse(file_get_contents('.env'));
+          echo $environment['APP_KEY'] ?? '';
+          PHP
+          )"
+          test -n "$temporary_app_key"
+          printf '::add-mask::%s\n' "$temporary_app_key"
+          printf 'APP_KEY=%s\n' "$temporary_app_key" >> "$GITHUB_ENV"
+      - name: Provision one disposable schema and a schema-scoped test user
+        env:
+          COMPONENT: ${{ matrix.component }}
+        run: |
+          COMPONENT_NAME="$COMPONENT" php <<'PHP'
+          <?php
+          $serviceName = getenv('COMPONENT_NAME');
+          $allowedServices = ['auth', 'clients', 'appointments', 'interventions', 'inventory', 'billing', 'accounting'];
+          $serviceName = preg_replace('/-service$/', '', $serviceName);
+          if (! in_array($serviceName, $allowedServices, true)) {
+              throw new RuntimeException('The CI component is not an approved service name.');
+          }
+          $databaseName = $serviceName === 'auth' ? 'auth_db' : 'lot1_'.$serviceName;
+          $databaseUser = 'lot1_'.$serviceName;
+          $databasePassword = bin2hex(random_bytes(32));
+          $database = new PDO('mysql:host=127.0.0.1;port=3306;charset=utf8mb4', 'root', '', [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+          ]);
+          $database->exec("CREATE DATABASE `$databaseName` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+          $database->exec('CREATE USER '.$database->quote($databaseUser)."@'%' IDENTIFIED BY ".$database->quote($databasePassword));
+          $database->exec("GRANT ALL PRIVILEGES ON `$databaseName`.* TO ".$database->quote($databaseUser)."@'%'");
+          $database->exec('FLUSH PRIVILEGES');
+          fwrite(STDOUT, '::add-mask::'.$databasePassword."\n");
+          $environmentValues = [
+              'DB_CONNECTION' => 'mariadb',
+              'DB_HOST' => '127.0.0.1',
+              'DB_PORT' => '3306',
+              'DB_DATABASE' => $databaseName,
+              'DB_USERNAME' => $databaseUser,
+              'DB_PASSWORD' => $databasePassword,
+              'DB_URL' => '',
+              'LOT1_MARIADB_USER' => $databaseUser,
+              'LOT1_MARIADB_PASSWORD' => $databasePassword,
+          ];
+          $environmentFile = getenv('GITHUB_ENV');
+          foreach ($environmentValues as $key => $value) {
+              file_put_contents($environmentFile, "$key=$value\n", FILE_APPEND);
+          }
+          echo "Disposable schema $databaseName and schema-scoped user were provisioned.\n";
+          PHP
+      - name: Clear cached Laravel configuration
+        run: php artisan config:clear
+      - name: Validate service migrations against MariaDB 10.11
+        run: php artisan migrate --force --no-interaction
+      - name: Run the MariaDB company security integration test
+        if: ${{ contains(fromJSON('["auth-service","interventions-service","inventory-service","billing-service","accounting-service"]'), matrix.component) }}
+        run: php artisan test --display-warnings --filter=CompanySecurityMariaDbTest
+
+  production-lite-validation:
+    name: PRODUCTION-LITE and deployment artifact validation
+    needs: [branch-context, composer-validation, laravel-tests, gitleaks, security-tests, mariadb-validation]
+    if: ${{ contains(fromJSON('["release","main"]'), needs.branch-context.outputs.target_branch) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.3'
+          extensions: bcmath, intl, mbstring, openssl, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+      - name: Check compatibility with the target architecture and PHP
+        run: |
+          test "$(uname -m)" = x86_64
+          php -r 'if (PHP_MAJOR_VERSION !== 8 || PHP_MINOR_VERSION !== 3) { exit(1); }'
+          php --version | head -n 1
+          uname -m
+      - name: Validate PRODUCTION-LITE security and runtime templates
+        run: |
+          test -f infrastructure/production-lite/mariadb/shared-user-provisioning.sql.template
+          test -f infrastructure/production-lite/mariadb/low-memory.cnf.example
+          test -f infrastructure/production-lite/php-fpm/pool.conf.template
+          test -f infrastructure/production-lite/php/99-vicartech-opcache.ini
+          grep -Eq '^bind-address=127\.0\.0\.1$' infrastructure/production-lite/mariadb/low-memory.cnf.example
+          grep -Eq '^pm = ondemand$' infrastructure/production-lite/php-fpm/pool.conf.template
+          grep -Eq '^pm\.max_children = 1$' infrastructure/production-lite/php-fpm/pool.conf.template
+          python3 - <<'PY'
+          from pathlib import Path
+
+          sql_template = Path("infrastructure/production-lite/mariadb/shared-user-provisioning.sql.template").read_text()
+          service_names = ("auth", "clients", "appointments", "interventions", "inventory", "billing", "accounting")
+          for service_name in service_names:
+              database_name = f"vicartech_{service_name}"
+              if f"CREATE DATABASE IF NOT EXISTS `{database_name}`" not in sql_template:
+                  raise SystemExit(f"Missing required schema declaration for {database_name}.")
+              if f"GRANT ALL PRIVILEGES ON `{database_name}`.* TO 'vicartech'@'127.0.0.1'" not in sql_template:
+                  raise SystemExit(f"Missing local schema-scoped grants for {database_name}.")
+          if "GRANT ALL PRIVILEGES ON *.*" in sql_template or "WITH GRANT OPTION" in sql_template:
+              raise SystemExit("The shared database account must not receive global privileges.")
+          print("Seven local schemas and non-global vicartech grants are present.")
+          PY
+          for script in infrastructure/production-lite/scripts/*.sh; do bash -n "$script"; done
+      - name: Build and inspect a source release archive
+        env:
+          RELEASE_ARCHIVE: ${{ runner.temp }}/vicartech-source-${{ github.sha }}.tar.gz
+        run: |
+          git archive --format=tar --prefix=vicartech/ "$GITHUB_SHA" | gzip -n > "$RELEASE_ARCHIVE"
+          python3 - "$RELEASE_ARCHIVE" <<'PY'
+          import pathlib
+          import sys
+          import tarfile
+
+          archive_path = pathlib.Path(sys.argv[1])
+          with tarfile.open(archive_path, "r:gz") as archive:
+              members = [member.name for member in archive.getmembers() if member.isfile()]
+          expected_services = ("auth", "clients", "appointments", "interventions", "inventory", "billing", "accounting")
+          composer_locks = [name for name in members if name.endswith("composer.lock")]
+          if len(composer_locks) != 8:
+              raise SystemExit(f"Expected eight Composer lock files; found {len(composer_locks)}.")
+          for service_name in expected_services:
+              service_prefix = f"vicartech/services/{service_name}-service/"
+              if f"{service_prefix}artisan" not in members or f"{service_prefix}composer.lock" not in members:
+                  raise SystemExit(f"The source artifact is incomplete for {service_name}.")
+          forbidden_parts = {".git", ".private", "vendor", "node_modules", "__pycache__"}
+          for member_name in members:
+              path = pathlib.PurePosixPath(member_name)
+              if forbidden_parts.intersection(path.parts):
+                  raise SystemExit(f"Private or generated content found in the artifact: {member_name}")
+              if path.name == ".env" or (path.name.startswith(".env.") and path.name != ".env.example"):
+                  raise SystemExit(f"A real environment file is present in the artifact: {member_name}")
+              if path.suffix.lower() in {".dump", ".sqlite", ".sqlite3", ".db", ".bak", ".backup"}:
+                  raise SystemExit(f"A database or backup file is present in the artifact: {member_name}")
+          print(f"Validated {len(members)} files in the release source archive.")
+          PY
+
+  semantic-version-tag:
+    name: Semantic version tag validation
+    needs: [branch-context, composer-validation, laravel-tests, gitleaks, security-tests, mariadb-validation, production-lite-validation]
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, Node.js 24
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate semantic version and main ancestry
+        shell: bash
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          git show-ref --verify --quiet refs/remotes/origin/main
+          git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
+          echo "The semantic version tag points to a commit on main."
