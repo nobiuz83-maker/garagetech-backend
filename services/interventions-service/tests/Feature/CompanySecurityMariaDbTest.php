@@ -12,21 +12,24 @@ class CompanySecurityMariaDbTest extends TestCase
     public function test_isolated_mariadb_migrations_constraints_json_and_database_permissions(): void
     {
         if (getenv('LOT1_MARIADB_ENABLED') !== 'true') {
-            $this->markTestSkipped('Requires the separately provisioned, isolated LOT 1 MariaDB socket.');
+            $this->markTestSkipped('Requires a separately provisioned, isolated LOT 1 MariaDB instance.');
         }
         $service = config('company_security.service_name');
         $shortName = str_replace('-service', '', $service);
         $database = $shortName === 'auth' ? 'auth_db' : 'lot1_'.$shortName;
         $this->assertSame('lot1_'.$shortName, getenv('LOT1_MARIADB_USER'));
         config()->set('database.connections.lot1_validation', [
-            'driver' => 'mariadb', 'url' => null, 'unix_socket' => '/run/lot1-mariadb/mysqld.sock',
+            'driver' => 'mariadb', 'url' => null,
+            'host' => getenv('LOT1_MARIADB_HOST') ?: null,
+            'port' => getenv('LOT1_MARIADB_PORT') ?: null,
+            'unix_socket' => getenv('LOT1_MARIADB_HOST') ? null : (getenv('LOT1_MARIADB_SOCKET') ?: '/run/lot1-mariadb/mysqld.sock'),
             'database' => $database, 'username' => getenv('LOT1_MARIADB_USER'),
             'password' => getenv('LOT1_MARIADB_PASSWORD'), 'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '', 'strict' => true,
         ]);
         config()->set('database.default', 'lot1_validation');
         DB::purge('lot1_validation');
-        $this->assertStringStartsWith('10.6.', DB::selectOne('SELECT VERSION() AS version')->version);
+        $this->assertStringStartsWith('10.11.', DB::selectOne('SELECT VERSION() AS version')->version);
         $this->artisan('migrate', ['--force' => true])->assertSuccessful();
         $this->artisan('migrate', ['--force' => true])->assertSuccessful();
         DB::beginTransaction();
