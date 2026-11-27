@@ -1,0 +1,9 @@
+[Unit]
+Description=Back up ViCarTech MariaDB databases
+RequiresMountsFor=/mnt/vicartech-backups
+
+[Service]
+Type=oneshot
+User=vicartech-backup
+EnvironmentFile=/etc/vicartech/backup.env
+ExecStart=/opt/vicartech/infrastructure/lan/backup-databases.sh

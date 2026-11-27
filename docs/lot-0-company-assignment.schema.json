@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Approved company assignment manifest — never inferred automatically",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "sourceSnapshotSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "companies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "companyId",
+          "displayName"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,19}$",
+            "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "owner",
+                "administrator",
+                "service_advisor",
+                "technician",
+                "inventory_manager",
+                "accountant",
+                "auditor"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "subject",
+          "companyId",
+          "roleIds"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceSystem": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceTable": {
+            "type": "string",
+            "enum": [
+              "clients",
+              "vehicles",
+              "appointments",
+              "appointment_schedules",
+              "interventions",
+              "products",
+              "suppliers",
+              "commercial_documents",
+              "accounting_entries",
+              "attachments"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedSourceRowSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "sourceSystem",
+          "sourceTable",
+          "sourceId",
+          "companyId",
+          "expectedSourceRowSha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "operatorId": {
+          "type": "string",
+          "minLength": 3
+        },
+        "reviewerId": {
+          "type": "string",
+          "minLength": 3
+        },
+        "decisionReference": {
+          "type": "string",
+          "minLength": 3
+        },
+        "approvedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "archiveDecision": {
+          "const": "keep-existing-eight-archives"
+        }
+      },
+      "required": [
+        "operatorId",
+        "reviewerId",
+        "decisionReference",
+        "approvedAt",
+        "archiveDecision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "sourceSnapshotSha256",
+    "companies",
+    "memberships",
+    "assignments",
+    "approval"
+  ],
+  "x-semantic-validation": [
+    "operator and reviewer must be independently authenticated and distinct",
+    "all company references must exist exactly once in companies",
+    "every source object including each relation/attachment must be assigned exactly once",
+    "company must agree across each local and external business relation",
+    "role grants and first owners require explicit approval; no inferred creator",
+    "source snapshot and row digests must match before any future backfill",
+    "zero changes of archived flags and no deletion"
+  ]
+}

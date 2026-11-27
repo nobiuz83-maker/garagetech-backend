@@ -1,0 +1,28 @@
+# Install one server block per service name on 127.0.0.1:8443.
+# Replace SERVICE_NAME and SERVICE_ROOT. Do not make this listener public.
+server {
+    listen 127.0.0.1:8443 ssl;
+    server_name SERVICE_NAME.internal;
+    root SERVICE_ROOT/public;
+    ssl_certificate /etc/vicartech/tls/SERVICE_NAME/server.crt;
+    ssl_certificate_key /etc/vicartech/tls/SERVICE_NAME/server.key;
+    ssl_client_certificate /etc/vicartech/tls/ca.crt;
+    ssl_verify_client on;
+    ssl_verify_depth 1;
+
+    # Default to the gateway identity. Add narrow caller exceptions only
+    # where the checked-in Apache mTLS rules explicitly permit them.
+    if ($ssl_client_s_dn_cn != "gateway") { return 403; }
+
+    location / {
+        try_files $uri /index.php?$query_string;
+        location ~ \.php$ { return 404; }
+    }
+    location = /index.php {
+        include /etc/nginx/snippets/vicartech/fastcgi-laravel.conf;
+        fastcgi_param SCRIPT_FILENAME SERVICE_ROOT/public/index.php;
+        fastcgi_param DOCUMENT_ROOT SERVICE_ROOT/public;
+        fastcgi_pass unix:/run/php/php8.3-fpm-SERVICE_NAME.sock;
+    }
+    location ~ /\. { deny all; }
+}

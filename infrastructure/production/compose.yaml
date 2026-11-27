@@ -1,0 +1,579 @@
+name: ${COMPOSE_PROJECT_NAME:-vicartech-production}
+
+x-laravel-defaults: &laravel-defaults
+  restart: unless-stopped
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+    - /var/www/html/bootstrap/cache:size=32m,uid=1000,gid=1000,mode=0770
+    - /var/www/html/storage/framework:size=128m,uid=1000,gid=1000,mode=0770
+    - /var/www/html/storage/logs:size=32m,uid=1000,gid=1000,mode=0770
+  environment: &laravel-environment
+    APP_ENV: production
+    APP_DEBUG: "false"
+    LOG_CHANNEL: stderr
+    SESSION_DRIVER: file
+    SESSION_SECURE_COOKIE: "true"
+    SESSION_HTTP_ONLY: "true"
+    SESSION_SAME_SITE: lax
+    CACHE_STORE: file
+    QUEUE_CONNECTION: sync
+    APP_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+    FRONTEND_URL: https://${PUBLIC_DOMAIN}
+    COMPANY_SECURITY_ENABLED: "true"
+    INTERNAL_V2_CLOCK_SKEW_SECONDS: "30"
+    INTERNAL_V2_NONCE_SECONDS: "90"
+    AUTH_SERVICE_URL: https://auth-service:8443
+    AUTH_SERVICE_V2_URL: https://auth-service:8443
+    AUTH_V2_URL: https://auth-service:8443
+    AUTH_CA_CERTIFICATE_FILE: /run/vicartech-tls/ca.crt
+    AUTH_V2_CA_CERTIFICATE_FILE: /run/vicartech-tls/ca.crt
+  networks:
+    - application
+    - outbound
+
+x-laravel-healthcheck: &laravel-healthcheck
+  test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/api/health >/dev/null"]
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 30s
+
+services:
+  database-auth:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_auth
+      MARIADB_USER: vicartech_auth_app
+      MARIADB_PASSWORD_FILE: /run/secrets/auth_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [auth_db_password, mariadb_root_password]
+    volumes: [auth_data:/var/lib/mysql]
+    networks: [auth_data]
+    mem_limit: 384m
+    healthcheck: &mariadb-healthcheck
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  database-clients:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_clients
+      MARIADB_USER: vicartech_clients_app
+      MARIADB_PASSWORD_FILE: /run/secrets/clients_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [clients_db_password, mariadb_root_password]
+    volumes: [clients_data:/var/lib/mysql]
+    networks: [clients_data]
+    mem_limit: 384m
+    healthcheck: *mariadb-healthcheck
+
+  database-appointments:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=50"]
+    environment:
+      MARIADB_DATABASE: vicartech_appointments
+      MARIADB_USER: vicartech_appointments_app
+      MARIADB_PASSWORD_FILE: /run/secrets/appointments_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [appointments_db_password, mariadb_root_password]
+    volumes: [appointments_data:/var/lib/mysql]
+    networks: [appointments_data]
+    mem_limit: 448m
+    healthcheck: *mariadb-healthcheck
+
+  database-interventions:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_interventions
+      MARIADB_USER: vicartech_interventions_app
+      MARIADB_PASSWORD_FILE: /run/secrets/interventions_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [interventions_db_password, mariadb_root_password]
+    volumes: [interventions_data:/var/lib/mysql]
+    networks: [interventions_data]
+    mem_limit: 384m
+    healthcheck: *mariadb-healthcheck
+
+  database-inventory:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_inventory
+      MARIADB_USER: vicartech_inventory_app
+      MARIADB_PASSWORD_FILE: /run/secrets/inventory_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [inventory_db_password, mariadb_root_password]
+    volumes: [inventory_data:/var/lib/mysql]
+    networks: [inventory_data]
+    mem_limit: 384m
+    healthcheck: *mariadb-healthcheck
+
+  database-billing:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_billing
+      MARIADB_USER: vicartech_billing_app
+      MARIADB_PASSWORD_FILE: /run/secrets/billing_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [billing_db_password, mariadb_root_password]
+    volumes: [billing_data:/var/lib/mysql]
+    networks: [billing_data]
+    mem_limit: 384m
+    healthcheck: *mariadb-healthcheck
+
+  database-accounting:
+    image: ${MARIADB_IMAGE:-mariadb:10.6.28-ubi9}
+    restart: unless-stopped
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=40"]
+    environment:
+      MARIADB_DATABASE: vicartech_accounting
+      MARIADB_USER: vicartech_accounting_app
+      MARIADB_PASSWORD_FILE: /run/secrets/accounting_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets: [accounting_db_password, mariadb_root_password]
+    volumes: [accounting_data:/var/lib/mysql]
+    networks: [accounting_data]
+    mem_limit: 384m
+    healthcheck: *mariadb-healthcheck
+
+  auth-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-auth-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Auth Service
+      APP_KEY_FILE: /run/secrets/auth_app_key
+      APP_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+      FRONTEND_URL: https://${PUBLIC_DOMAIN}
+      SANCTUM_STATEFUL_DOMAINS: ${PUBLIC_DOMAIN}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      DB_CONNECTION: mysql
+      DB_HOST: database-auth
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_auth
+      DB_USERNAME: vicartech_auth_app
+      DB_PASSWORD_FILE: /run/secrets/auth_db_password
+      INTERNAL_AUTH_CLIENTS_KEY_FILE: /run/secrets/internal_auth_clients_key
+      INTERNAL_AUTH_APPOINTMENTS_KEY_FILE: /run/secrets/internal_auth_appointments_key
+      INTERNAL_AUTH_V2_CLIENTS_KEY_FILE: /run/secrets/v2_clients_key
+      INTERNAL_AUTH_V2_APPOINTMENTS_KEY_FILE: /run/secrets/v2_appointments_key
+      INTERNAL_AUTH_V2_INTERVENTIONS_KEY_FILE: /run/secrets/v2_interventions_key
+      INTERNAL_AUTH_V2_INVENTORY_KEY_FILE: /run/secrets/v2_inventory_key
+      INTERNAL_AUTH_V2_BILLING_KEY_FILE: /run/secrets/v2_billing_key
+      INTERNAL_AUTH_V2_ACCOUNTING_KEY_FILE: /run/secrets/v2_accounting_key
+    secrets:
+      - auth_app_key
+      - auth_db_password
+      - internal_auth_clients_key
+      - internal_auth_appointments_key
+      - v2_clients_key
+      - v2_appointments_key
+      - v2_interventions_key
+      - v2_inventory_key
+      - v2_billing_key
+      - v2_accounting_key
+      - auth_server_cert
+      - auth_server_key
+      - internal_ca_cert
+    networks: [application, outbound, auth_data]
+    depends_on:
+      database-auth: {condition: service_healthy}
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  clients-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-clients-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Clients Service
+      APP_KEY_FILE: /run/secrets/clients_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-clients
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_clients
+      DB_USERNAME: vicartech_clients_app
+      DB_PASSWORD_FILE: /run/secrets/clients_db_password
+      AUTH_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth_v1_clients_key
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_clients_key
+      APPOINTMENTS_RELATIONSHIP_KEY_FILE: /run/secrets/appointments_relationship_key
+    secrets: [clients_app_key, clients_db_password, auth_v1_clients_key, v2_clients_key, appointments_relationship_key, internal_ca_cert, gateway_client_cert]
+    networks: [application, outbound, clients_data]
+    depends_on:
+      database-clients: {condition: service_healthy}
+      auth-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/clients-service:/run/vicartech-tls:ro
+      - ./apache/clients-internal.conf:/etc/apache2/sites-enabled/001-internal.conf:ro
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  appointments-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-appointments-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Appointments Service
+      APP_KEY_FILE: /run/secrets/appointments_app_key
+      APP_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+      FRONTEND_URL: https://${PUBLIC_DOMAIN}
+      DB_CONNECTION: mysql
+      DB_HOST: database-appointments
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_appointments
+      DB_USERNAME: vicartech_appointments_app
+      DB_PASSWORD_FILE: /run/secrets/appointments_db_password
+      QUEUE_CONNECTION: database
+      AUTH_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth_v1_appointments_key
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_appointments_key
+      AUTH_V2_CA_CERTIFICATE_FILE: /run/vicartech-tls/ca.crt
+      CLIENTS_SERVICE_URL: https://clients-service:8443
+      CLIENTS_RELATIONSHIP_KEY_FILE: /run/secrets/appointments_relationship_key
+      COMPANY_SECURITY_ENABLED: "true"
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+    env_file:
+      - ${GMAIL_ENV_FILE:?Set GMAIL_ENV_FILE}
+    secrets: [appointments_app_key, appointments_db_password, auth_v1_appointments_key, v2_appointments_key, appointments_relationship_key, internal_ca_cert, gateway_client_cert]
+    networks: [application, outbound, appointments_data]
+    depends_on:
+      database-appointments: {condition: service_healthy}
+      auth-service: {condition: service_healthy}
+      clients-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/appointments-service:/run/vicartech-tls:ro
+      - ./apache/appointments-internal.conf:/etc/apache2/sites-enabled/001-internal.conf:ro
+      - appointments_documents:/var/www/html/storage/app/private
+    mem_limit: 768m
+    healthcheck: *laravel-healthcheck
+
+  interventions-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-interventions-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Interventions Service
+      APP_KEY_FILE: /run/secrets/interventions_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-interventions
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_interventions
+      DB_USERNAME: vicartech_interventions_app
+      DB_PASSWORD_FILE: /run/secrets/interventions_db_password
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_interventions_key
+      INTERVENTION_CLIENTS_URL: https://clients-service:8443
+      INTERVENTION_APPOINTMENTS_URL: https://appointments-service:8443
+      INTERVENTION_CLIENTS_CA_FILE: /run/vicartech-tls/ca.crt
+      INTERVENTION_CLIENTS_CERT_FILE: /run/vicartech-tls/client.crt
+      INTERVENTION_CLIENTS_KEY_FILE: /run/vicartech-tls/client.key
+    secrets: [interventions_app_key, interventions_db_password, v2_interventions_key]
+    networks: [application, outbound, interventions_data]
+    depends_on:
+      database-interventions: {condition: service_healthy}
+      appointments-service: {condition: service_healthy}
+      clients-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/interventions-service:/run/vicartech-tls:ro
+      - ./apache/interventions-internal.conf:/etc/apache2/sites-enabled/001-internal.conf:ro
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  inventory-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-inventory-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Inventory Service
+      APP_KEY_FILE: /run/secrets/inventory_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-inventory
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_inventory
+      DB_USERNAME: vicartech_inventory_app
+      DB_PASSWORD_FILE: /run/secrets/inventory_db_password
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_inventory_key
+      INVENTORY_INTERVENTIONS_URL: https://interventions-service:8443
+      INVENTORY_INTERVENTIONS_CA_FILE: /run/vicartech-tls/ca.crt
+      INVENTORY_INTERVENTIONS_CERT_FILE: /run/vicartech-tls/client.crt
+      INVENTORY_INTERVENTIONS_KEY_FILE: /run/vicartech-tls/client.key
+      INVENTORY_BILLING_URL: https://billing-service:8443
+      INVENTORY_TO_BILLING_SIGNING_KEY_FILE: /run/secrets/billing_inventory_key
+      INVENTORY_BILLING_KEY_FILE: /run/secrets/billing_inventory_key
+    secrets: [inventory_app_key, inventory_db_password, v2_inventory_key, billing_inventory_key]
+    networks: [application, outbound, inventory_data]
+    depends_on:
+      database-inventory: {condition: service_healthy}
+      interventions-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/inventory-service:/run/vicartech-tls:ro
+      - ./apache/inventory-internal.conf:/etc/apache2/sites-enabled/001-internal.conf:ro
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  billing-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-billing-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Billing Service
+      APP_KEY_FILE: /run/secrets/billing_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-billing
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_billing
+      DB_USERNAME: vicartech_billing_app
+      DB_PASSWORD_FILE: /run/secrets/billing_db_password
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_billing_key
+      BILLING_INTERVENTIONS_URL: https://interventions-service:8443
+      BILLING_INTERVENTIONS_CA_FILE: /run/vicartech-tls/ca.crt
+      BILLING_INTERVENTIONS_CERT_FILE: /run/vicartech-tls/client.crt
+      BILLING_INTERVENTIONS_KEY_FILE: /run/vicartech-tls/client.key
+      BILLING_INVENTORY_URL: https://inventory-service:8443
+      BILLING_TO_INVENTORY_SIGNING_KEY_FILE: /run/secrets/billing_inventory_key
+      BILLING_INVENTORY_KEY_FILE: /run/secrets/billing_inventory_key
+    secrets: [billing_app_key, billing_db_password, v2_billing_key, billing_inventory_key]
+    networks: [application, outbound, billing_data]
+    depends_on:
+      database-billing: {condition: service_healthy}
+      interventions-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/billing-service:/run/vicartech-tls:ro
+      - ./apache/billing-internal.conf:/etc/apache2/sites-enabled/001-internal.conf:ro
+      - billing_logos:/var/www/html/storage/app/company-logos
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  accounting-service:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-accounting-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Accounting Service
+      APP_KEY_FILE: /run/secrets/accounting_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-accounting
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_accounting
+      DB_USERNAME: vicartech_accounting_app
+      DB_PASSWORD_FILE: /run/secrets/accounting_db_password
+      AUTH_V2_CLIENT_CERTIFICATE_FILE: /run/vicartech-tls/client.crt
+      AUTH_V2_CLIENT_KEY_FILE: /run/vicartech-tls/client.key
+      AUTH_V2_SIGNING_KEY_FILE: /run/secrets/v2_accounting_key
+    secrets: [accounting_app_key, accounting_db_password, v2_accounting_key]
+    networks: [application, outbound, accounting_data]
+    depends_on:
+      database-accounting: {condition: service_healthy}
+      auth-service: {condition: service_healthy}
+    volumes:
+      - ${PRODUCTION_SECRETS_DIR}/tls/accounting-service:/run/vicartech-tls:ro
+    mem_limit: 640m
+    healthcheck: *laravel-healthcheck
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-frontend:${FRONTEND_IMAGE_TAG:?Set FRONTEND_IMAGE_TAG}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp:size=16m,mode=1777]
+    networks: [public]
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/frontend-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  gateway:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-production-gateway:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    restart: unless-stopped
+    init: true
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp:size=32m,mode=1777]
+    ports: ["80:80", "443:443"]
+    environment:
+      PUBLIC_DOMAIN: "${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}"
+    volumes:
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
+    secrets: [internal_ca_cert, gateway_client_cert, gateway_client_key]
+    networks: [public, application]
+    depends_on:
+      frontend: {condition: service_healthy}
+      auth-service: {condition: service_healthy}
+      clients-service: {condition: service_healthy}
+      appointments-service: {condition: service_healthy}
+      interventions-service: {condition: service_healthy}
+      inventory-service: {condition: service_healthy}
+      billing-service: {condition: service_healthy}
+      accounting-service: {condition: service_healthy}
+    mem_limit: 192m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/gateway-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  appointments-notification-worker:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-appointments-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    command: ["php", "artisan", "queue:work", "database", "--queue=notifications", "--tries=4", "--timeout=90", "--sleep=2"]
+    env_file: ["${GMAIL_ENV_FILE:?Set GMAIL_ENV_FILE}"]
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Appointment Notification Worker
+      APP_KEY_FILE: /run/secrets/appointments_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-appointments
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_appointments
+      DB_USERNAME: vicartech_appointments_app
+      DB_PASSWORD_FILE: /run/secrets/appointments_db_password
+      QUEUE_CONNECTION: database
+      FRONTEND_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+    secrets: [appointments_app_key, appointments_db_password]
+    networks: [application, outbound, appointments_data]
+    depends_on:
+      database-appointments: {condition: service_healthy}
+      appointments-service: {condition: service_healthy}
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan queue:monitor notifications --max=1000 >/dev/null 2>&1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  appointments-scheduler:
+    <<: *laravel-defaults
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER}/vicartech-appointments-service:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG}
+    command: ["php", "artisan", "schedule:work", "--verbose", "--no-interaction"]
+    env_file: ["${GMAIL_ENV_FILE:?Set GMAIL_ENV_FILE}"]
+    environment:
+      <<: *laravel-environment
+      APP_NAME: ViCarTech Appointment Scheduler
+      APP_KEY_FILE: /run/secrets/appointments_app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database-appointments
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_appointments
+      DB_USERNAME: vicartech_appointments_app
+      DB_PASSWORD_FILE: /run/secrets/appointments_db_password
+      QUEUE_CONNECTION: database
+      FRONTEND_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
+    secrets: [appointments_app_key, appointments_db_password]
+    networks: [application, outbound, appointments_data]
+    depends_on:
+      database-appointments: {condition: service_healthy}
+      appointments-service: {condition: service_healthy}
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan schedule:list >/dev/null 2>&1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  certbot:
+    image: ${CERTBOT_IMAGE:-certbot/certbot:v5.0.0}
+    profiles: [certificate-bootstrap]
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+
+networks:
+  public: {}
+  application:
+    internal: true
+  outbound: {}
+  auth_data:
+    internal: true
+  clients_data:
+    internal: true
+  appointments_data:
+    internal: true
+  interventions_data:
+    internal: true
+  inventory_data:
+    internal: true
+  billing_data:
+    internal: true
+  accounting_data:
+    internal: true
+
+volumes:
+  auth_data: {name: vicartech_production_auth_data}
+  clients_data: {name: vicartech_production_clients_data}
+  appointments_data: {name: vicartech_production_appointments_data}
+  interventions_data: {name: vicartech_production_interventions_data}
+  inventory_data: {name: vicartech_production_inventory_data}
+  billing_data: {name: vicartech_production_billing_data}
+  accounting_data: {name: vicartech_production_accounting_data}
+  appointments_documents: {name: vicartech_production_appointments_documents}
+  billing_logos: {name: vicartech_production_billing_logos}
+  letsencrypt: {name: vicartech_production_letsencrypt}
+  certbot_webroot: {name: vicartech_production_certbot_webroot}
+
+secrets:
+  mariadb_root_password: {file: "${PRODUCTION_SECRETS_DIR:?Set PRODUCTION_SECRETS_DIR}/mariadb_root_password"}
+  auth_app_key: {file: "${PRODUCTION_SECRETS_DIR}/auth_app_key"}
+  auth_db_password: {file: "${PRODUCTION_SECRETS_DIR}/auth_db_password"}
+  clients_app_key: {file: "${PRODUCTION_SECRETS_DIR}/clients_app_key"}
+  clients_db_password: {file: "${PRODUCTION_SECRETS_DIR}/clients_db_password"}
+  appointments_app_key: {file: "${PRODUCTION_SECRETS_DIR}/appointments_app_key"}
+  appointments_db_password: {file: "${PRODUCTION_SECRETS_DIR}/appointments_db_password"}
+  interventions_app_key: {file: "${PRODUCTION_SECRETS_DIR}/interventions_app_key"}
+  interventions_db_password: {file: "${PRODUCTION_SECRETS_DIR}/interventions_db_password"}
+  inventory_app_key: {file: "${PRODUCTION_SECRETS_DIR}/inventory_app_key"}
+  inventory_db_password: {file: "${PRODUCTION_SECRETS_DIR}/inventory_db_password"}
+  billing_app_key: {file: "${PRODUCTION_SECRETS_DIR}/billing_app_key"}
+  billing_db_password: {file: "${PRODUCTION_SECRETS_DIR}/billing_db_password"}
+  accounting_app_key: {file: "${PRODUCTION_SECRETS_DIR}/accounting_app_key"}
+  accounting_db_password: {file: "${PRODUCTION_SECRETS_DIR}/accounting_db_password"}
+  internal_auth_clients_key: {file: "${PRODUCTION_SECRETS_DIR}/internal_auth_clients_key"}
+  internal_auth_appointments_key: {file: "${PRODUCTION_SECRETS_DIR}/internal_auth_appointments_key"}
+  auth_v1_clients_key: {file: "${PRODUCTION_SECRETS_DIR}/internal_auth_clients_key"}
+  auth_v1_appointments_key: {file: "${PRODUCTION_SECRETS_DIR}/internal_auth_appointments_key"}
+  appointments_relationship_key: {file: "${PRODUCTION_SECRETS_DIR}/appointments_relationship_key"}
+  v2_clients_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_clients_key"}
+  v2_appointments_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_appointments_key"}
+  v2_interventions_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_interventions_key"}
+  v2_inventory_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_inventory_key"}
+  v2_billing_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_billing_key"}
+  v2_accounting_key: {file: "${PRODUCTION_SECRETS_DIR}/v2_accounting_key"}
+  billing_inventory_key: {file: "${PRODUCTION_SECRETS_DIR}/billing_inventory_key"}
+  auth_server_cert: {file: "${PRODUCTION_SECRETS_DIR}/tls/auth-service/server.crt"}
+  auth_server_key: {file: "${PRODUCTION_SECRETS_DIR}/tls/auth-service/server.key"}
+  internal_ca_cert: {file: "${PRODUCTION_SECRETS_DIR}/tls/auth-service/ca.crt"}
+  gateway_client_cert: {file: "${PRODUCTION_SECRETS_DIR}/tls/gateway/client.crt"}
+  gateway_client_key: {file: "${PRODUCTION_SECRETS_DIR}/tls/gateway/client.key"}

@@ -1,0 +1,40 @@
+-- Render this template to a root-only temporary SQL file before execution.
+-- Replace both markers with the same generated lowercase hexadecimal password.
+-- The dedicated account's privileges are reset before schema-only grants.
+CREATE DATABASE IF NOT EXISTS `vicartech_auth`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_clients`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_appointments`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_interventions`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_inventory`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_billing`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `vicartech_accounting`
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER DATABASE `vicartech_auth` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_clients` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_appointments` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_interventions` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_inventory` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_billing` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `vicartech_accounting` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'vicartech'@'127.0.0.1'
+  IDENTIFIED BY '__VICARTECH_DATABASE_PASSWORD__';
+ALTER USER 'vicartech'@'127.0.0.1'
+  IDENTIFIED BY '__VICARTECH_DATABASE_PASSWORD__';
+
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'vicartech'@'127.0.0.1';
+
+GRANT ALL PRIVILEGES ON `vicartech_auth`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_clients`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_appointments`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_interventions`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_inventory`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_billing`.* TO 'vicartech'@'127.0.0.1';
+GRANT ALL PRIVILEGES ON `vicartech_accounting`.* TO 'vicartech'@'127.0.0.1';

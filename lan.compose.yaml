@@ -1,0 +1,89 @@
+name: ${VICARTECH_PROJECT_NAME:?Set a profile-specific project name}
+# Shared HTTPS overlay for OFFICE and HOME. HOME remains inactive until explicitly authorized.
+services:
+  gateway:
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+    ports:
+      - "${PROFILE_BIND_IP:?Set the profile bind address}:${PROFILE_HTTPS_PORT:?Set the HTTPS port}:8443"
+    volumes:
+      - ./gateway/lan.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./gateway/workflow-headers.conf:/etc/nginx/workflow-headers.conf:ro
+      - ./gateway/auth-proxy.conf:/etc/nginx/auth-proxy.conf:ro
+      - ./gateway/clients-proxy.conf:/etc/nginx/clients-proxy.conf:ro
+      - ./gateway/appointments-proxy.conf:/etc/nginx/appointments-proxy.conf:ro
+      - ${PROFILE_FRONTEND_DIST:?Set the profile frontend build directory}:/usr/share/nginx/html:ro
+    secrets:
+      - lan_server_cert
+      - lan_server_key
+  auth-service:
+    environment:
+      APP_URL: ${PROFILE_ORIGIN:?Set the exact HTTPS browser origin}
+      FRONTEND_URL: ${PROFILE_ORIGIN}
+      SANCTUM_STATEFUL_DOMAINS: ${PROFILE_STATEFUL_DOMAIN:?Set host and non-default port for Sanctum}
+      SESSION_SECURE_COOKIE: "true"
+secrets:
+  stage1_root_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/root-password
+  auth_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/auth-app-key
+  auth_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/auth-db-password
+  clients_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-app-key
+  clients_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-db-password
+  appointments_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-app-key
+  appointments_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-db-password
+  interventions_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/interventions-app-key
+  interventions_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/interventions-db-password
+  inventory_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/inventory-app-key
+  inventory_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/inventory-db-password
+  billing_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/billing-app-key
+  billing_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/billing-db-password
+  accounting_app_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/accounting-app-key
+  accounting_db_password:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/accounting-db-password
+  internal_clients_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-signing-key
+  internal_appointments_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-signing-key
+  internal_ca_cert:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/internal-ca.crt
+  auth_server_cert:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/auth-server.crt
+  auth_server_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/auth-server.key
+  clients_internal_cert:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-client.crt
+  clients_internal_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-client.key
+  clients_internal_signing_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/clients-signing-key
+  appointments_internal_cert:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-client.crt
+  appointments_internal_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-client.key
+  appointments_internal_signing_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/appointments-signing-key
+  gateway_client_cert:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/gateway-client.crt
+  gateway_client_key:
+    file: ${PROFILE_SECRETS_DIR:?Set private profile secrets directory}/gateway-client.key
+  lan_server_cert:
+    file: ${PROFILE_TLS_DIR:?Set a private profile TLS directory}/server.crt
+  lan_server_key:
+    file: ${PROFILE_TLS_DIR}/server.key
+
+volumes:
+  stage1_database_data:
+    name: ${VICARTECH_VOLUME_NAME:?Set a profile-specific database volume}

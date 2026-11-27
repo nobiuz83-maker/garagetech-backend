@@ -1,0 +1,10 @@
+[Unit]
+Description=Record ViCarTech host resource status
+
+[Service]
+Type=oneshot
+ExecStart=/srv/vicartech/deployment/infrastructure/production-lite/scripts/monitor.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

@@ -1,0 +1,681 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed-business-approval-required",
+  "ownershipModel": "company",
+  "combination": "union of roles within one active company membership only",
+  "wildcardsAllowed": false,
+  "permissions": [
+    {
+      "code": "identity.companies.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "identity.companies.manage",
+      "mutating": true,
+      "requires": [
+        "identity.companies.read"
+      ]
+    },
+    {
+      "code": "identity.members.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "identity.members.manage",
+      "mutating": true,
+      "requires": [
+        "identity.companies.read",
+        "identity.members.read"
+      ]
+    },
+    {
+      "code": "identity.roles.assign",
+      "mutating": true,
+      "requires": [
+        "identity.companies.read",
+        "identity.members.read"
+      ]
+    },
+    {
+      "code": "identity.owners.manage",
+      "mutating": true,
+      "requires": [
+        "identity.companies.read",
+        "identity.members.read"
+      ]
+    },
+    {
+      "code": "identity.audit.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "clients.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "clients.write",
+      "mutating": true,
+      "requires": [
+        "clients.read"
+      ]
+    },
+    {
+      "code": "clients.archive",
+      "mutating": true,
+      "requires": [
+        "clients.read"
+      ]
+    },
+    {
+      "code": "clients.restore",
+      "mutating": true,
+      "requires": [
+        "clients.read"
+      ]
+    },
+    {
+      "code": "vehicles.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "vehicles.write",
+      "mutating": true,
+      "requires": [
+        "vehicles.read"
+      ]
+    },
+    {
+      "code": "vehicles.archive",
+      "mutating": true,
+      "requires": [
+        "vehicles.read"
+      ]
+    },
+    {
+      "code": "vehicles.restore",
+      "mutating": true,
+      "requires": [
+        "vehicles.read"
+      ]
+    },
+    {
+      "code": "appointments.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "appointments.write",
+      "mutating": true,
+      "requires": [
+        "appointments.read"
+      ]
+    },
+    {
+      "code": "appointments.cancel",
+      "mutating": true,
+      "requires": [
+        "appointments.read"
+      ]
+    },
+    {
+      "code": "appointments.archive",
+      "mutating": true,
+      "requires": [
+        "appointments.read"
+      ]
+    },
+    {
+      "code": "appointments.settings.manage",
+      "mutating": true,
+      "requires": [
+        "appointments.read"
+      ]
+    },
+    {
+      "code": "interventions.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "interventions.write",
+      "mutating": true,
+      "requires": [
+        "interventions.read"
+      ]
+    },
+    {
+      "code": "interventions.complete",
+      "mutating": true,
+      "requires": [
+        "interventions.read"
+      ]
+    },
+    {
+      "code": "interventions.cancel",
+      "mutating": true,
+      "requires": [
+        "interventions.read"
+      ]
+    },
+    {
+      "code": "interventions.catalog.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "interventions.catalog.manage",
+      "mutating": true,
+      "requires": [
+        "interventions.catalog.read",
+        "interventions.read"
+      ]
+    },
+    {
+      "code": "interventions.pricing.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "interventions.pricing.manage",
+      "mutating": true,
+      "requires": [
+        "interventions.pricing.read",
+        "interventions.read"
+      ]
+    },
+    {
+      "code": "inventory.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "inventory.catalog.manage",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.suppliers.manage",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.purchases.manage",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.receipts.record",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.returns.record",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.stock.adjust",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.stock.reserve",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.stock.consume",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.stock.release",
+      "mutating": true,
+      "requires": [
+        "inventory.read"
+      ]
+    },
+    {
+      "code": "inventory.valuation.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "billing.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "billing.estimates.write",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.estimates.approve",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.work_orders.write",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.work_orders.authorize",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.invoices.write",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.invoices.issue",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.payments.record",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.credit_notes.issue",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.refunds.record",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.prices.override",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.settings.manage",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "billing.drafts.archive",
+      "mutating": true,
+      "requires": [
+        "billing.read"
+      ]
+    },
+    {
+      "code": "accounting.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "accounting.bills.write",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.bills.post",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.supplier_payments.record",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.journal.post",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.journal.reverse",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.periods.close",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.tax_policies.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "accounting.tax_policies.manage",
+      "mutating": true,
+      "requires": [
+        "accounting.read",
+        "accounting.tax_policies.read"
+      ]
+    },
+    {
+      "code": "accounting.reports.read",
+      "mutating": false,
+      "requires": []
+    },
+    {
+      "code": "accounting.attachments.manage",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.mileage.write",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    },
+    {
+      "code": "accounting.treasury.manage",
+      "mutating": true,
+      "requires": [
+        "accounting.read"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "owner",
+      "permissions": [
+        "accounting.attachments.manage",
+        "accounting.bills.post",
+        "accounting.bills.write",
+        "accounting.journal.post",
+        "accounting.journal.reverse",
+        "accounting.mileage.write",
+        "accounting.periods.close",
+        "accounting.read",
+        "accounting.reports.read",
+        "accounting.supplier_payments.record",
+        "accounting.tax_policies.manage",
+        "accounting.tax_policies.read",
+        "accounting.treasury.manage",
+        "appointments.archive",
+        "appointments.cancel",
+        "appointments.read",
+        "appointments.settings.manage",
+        "appointments.write",
+        "billing.credit_notes.issue",
+        "billing.drafts.archive",
+        "billing.estimates.approve",
+        "billing.estimates.write",
+        "billing.invoices.issue",
+        "billing.invoices.write",
+        "billing.payments.record",
+        "billing.prices.override",
+        "billing.read",
+        "billing.refunds.record",
+        "billing.settings.manage",
+        "billing.work_orders.authorize",
+        "billing.work_orders.write",
+        "clients.archive",
+        "clients.read",
+        "clients.restore",
+        "clients.write",
+        "identity.audit.read",
+        "identity.companies.manage",
+        "identity.companies.read",
+        "identity.members.manage",
+        "identity.members.read",
+        "identity.owners.manage",
+        "identity.roles.assign",
+        "interventions.cancel",
+        "interventions.catalog.manage",
+        "interventions.catalog.read",
+        "interventions.complete",
+        "interventions.pricing.manage",
+        "interventions.pricing.read",
+        "interventions.read",
+        "interventions.write",
+        "inventory.catalog.manage",
+        "inventory.purchases.manage",
+        "inventory.read",
+        "inventory.receipts.record",
+        "inventory.returns.record",
+        "inventory.stock.adjust",
+        "inventory.stock.consume",
+        "inventory.stock.release",
+        "inventory.stock.reserve",
+        "inventory.suppliers.manage",
+        "inventory.valuation.read",
+        "vehicles.archive",
+        "vehicles.read",
+        "vehicles.restore",
+        "vehicles.write"
+      ]
+    },
+    {
+      "id": "administrator",
+      "permissions": [
+        "appointments.archive",
+        "appointments.cancel",
+        "appointments.read",
+        "appointments.settings.manage",
+        "appointments.write",
+        "billing.drafts.archive",
+        "billing.estimates.approve",
+        "billing.estimates.write",
+        "billing.invoices.issue",
+        "billing.invoices.write",
+        "billing.payments.record",
+        "billing.prices.override",
+        "billing.read",
+        "billing.settings.manage",
+        "billing.work_orders.authorize",
+        "billing.work_orders.write",
+        "clients.archive",
+        "clients.read",
+        "clients.restore",
+        "clients.write",
+        "identity.audit.read",
+        "identity.companies.manage",
+        "identity.companies.read",
+        "identity.members.manage",
+        "identity.members.read",
+        "identity.roles.assign",
+        "interventions.cancel",
+        "interventions.catalog.manage",
+        "interventions.catalog.read",
+        "interventions.complete",
+        "interventions.pricing.manage",
+        "interventions.pricing.read",
+        "interventions.read",
+        "interventions.write",
+        "inventory.catalog.manage",
+        "inventory.purchases.manage",
+        "inventory.read",
+        "inventory.receipts.record",
+        "inventory.returns.record",
+        "inventory.stock.adjust",
+        "inventory.stock.consume",
+        "inventory.stock.release",
+        "inventory.stock.reserve",
+        "inventory.suppliers.manage",
+        "inventory.valuation.read",
+        "vehicles.archive",
+        "vehicles.read",
+        "vehicles.restore",
+        "vehicles.write"
+      ]
+    },
+    {
+      "id": "service_advisor",
+      "permissions": [
+        "appointments.archive",
+        "appointments.cancel",
+        "appointments.read",
+        "appointments.write",
+        "billing.estimates.approve",
+        "billing.estimates.write",
+        "billing.invoices.issue",
+        "billing.invoices.write",
+        "billing.payments.record",
+        "billing.read",
+        "billing.work_orders.authorize",
+        "billing.work_orders.write",
+        "clients.archive",
+        "clients.read",
+        "clients.write",
+        "identity.companies.read",
+        "interventions.catalog.read",
+        "interventions.pricing.read",
+        "interventions.read",
+        "inventory.read",
+        "vehicles.archive",
+        "vehicles.read",
+        "vehicles.write"
+      ]
+    },
+    {
+      "id": "technician",
+      "permissions": [
+        "appointments.read",
+        "clients.read",
+        "identity.companies.read",
+        "interventions.cancel",
+        "interventions.catalog.read",
+        "interventions.complete",
+        "interventions.read",
+        "interventions.write",
+        "inventory.read",
+        "inventory.stock.consume",
+        "inventory.stock.release",
+        "inventory.stock.reserve",
+        "vehicles.read"
+      ]
+    },
+    {
+      "id": "inventory_manager",
+      "permissions": [
+        "identity.companies.read",
+        "interventions.read",
+        "inventory.catalog.manage",
+        "inventory.purchases.manage",
+        "inventory.read",
+        "inventory.receipts.record",
+        "inventory.returns.record",
+        "inventory.stock.adjust",
+        "inventory.stock.consume",
+        "inventory.stock.release",
+        "inventory.stock.reserve",
+        "inventory.suppliers.manage",
+        "inventory.valuation.read"
+      ]
+    },
+    {
+      "id": "accountant",
+      "permissions": [
+        "accounting.attachments.manage",
+        "accounting.bills.post",
+        "accounting.bills.write",
+        "accounting.journal.post",
+        "accounting.journal.reverse",
+        "accounting.mileage.write",
+        "accounting.periods.close",
+        "accounting.read",
+        "accounting.reports.read",
+        "accounting.supplier_payments.record",
+        "accounting.tax_policies.manage",
+        "accounting.tax_policies.read",
+        "accounting.treasury.manage",
+        "billing.read",
+        "clients.read",
+        "identity.companies.read",
+        "inventory.read",
+        "inventory.valuation.read",
+        "vehicles.read"
+      ]
+    },
+    {
+      "id": "auditor",
+      "permissions": [
+        "accounting.read",
+        "accounting.reports.read",
+        "accounting.tax_policies.read",
+        "appointments.read",
+        "billing.read",
+        "clients.read",
+        "identity.audit.read",
+        "identity.companies.read",
+        "identity.members.read",
+        "interventions.catalog.read",
+        "interventions.pricing.read",
+        "interventions.read",
+        "inventory.read",
+        "inventory.valuation.read",
+        "vehicles.read"
+      ]
+    }
+  ],
+  "invariants": [
+    "role assignment cannot grant owner without identity.owners.manage",
+    "last active owner cannot be removed",
+    "no self-escalation",
+    "financial immutability and archive-retention constraints cannot be overridden by roles",
+    "route handlers choose required permissions; user input never does"
+  ]
+}

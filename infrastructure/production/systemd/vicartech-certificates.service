@@ -1,0 +1,16 @@
+[Unit]
+Description=Renew ViCarTech HTTPS certificates
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=vicartech
+Group=vicartech
+Environment=PRODUCTION_ROOT=/opt/vicartech
+ExecStart=/opt/vicartech/deployment/infrastructure/production/renew-certificates.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/vicartech
+ProtectHome=true

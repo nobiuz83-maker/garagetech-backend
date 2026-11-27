@@ -1,0 +1,24 @@
+[Unit]
+Description=ViCarTech Appointments notification queue worker
+After=mariadb.service network.target
+
+[Service]
+Type=simple
+User=vicartech-appointments
+Group=vicartech-appointments
+WorkingDirectory=/srv/vicartech/current/services/appointments-service
+EnvironmentFile=/etc/vicartech/services/appointments.env
+ExecStart=/usr/bin/php artisan queue:work database --queue=notifications --sleep=5 --tries=3 --timeout=60 --max-time=3600
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=70
+MemoryMax=128M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/vicartech/shared/appointments-storage /srv/vicartech/current/services/appointments-service/storage
+
+[Install]
+WantedBy=multi-user.target

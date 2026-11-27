@@ -1,0 +1,4348 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ViCarTech internal company contracts — LOT 0 target, NOT IMPLEMENTED",
+    "version": "2.0.0-design.1"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.invalid/api/internal/v2",
+      "variables": {
+        "service": {
+          "default": "auth-service",
+          "enum": [
+            "auth-service",
+            "clients-service",
+            "appointments-service",
+            "interventions-service",
+            "inventory-service",
+            "billing-service",
+            "accounting-service"
+          ]
+        }
+      }
+    }
+  ],
+  "x-implementation-status": "design-only",
+  "paths": {
+    "/session/validate": {
+      "get": {
+        "operationId": "auth_service_get_session_validate",
+        "x-owner-service": "auth-service",
+        "x-allowed-callers": [
+          "clients-service",
+          "appointments-service",
+          "interventions-service",
+          "inventory-service",
+          "billing-service",
+          "accounting-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "requiredPermissions",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "identity.companies.read",
+                  "identity.members.read",
+                  "identity.audit.read",
+                  "clients.read",
+                  "vehicles.read",
+                  "appointments.read",
+                  "interventions.read",
+                  "interventions.catalog.read",
+                  "interventions.pricing.read",
+                  "inventory.read",
+                  "inventory.valuation.read",
+                  "billing.read",
+                  "accounting.read",
+                  "accounting.tax_policies.read",
+                  "accounting.reports.read"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 8,
+              "uniqueItems": true
+            },
+            "description": "Comma-separated list, explicitly parsed; only read permissions allowed. Exact raw query is signed."
+          },
+          {
+            "name": "purpose",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "const": "resource.read"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "read permissions only; write validation through GET refused",
+          "fresh online session/membership",
+          "no positive authorization fallback"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      },
+      "post": {
+        "operationId": "auth_service_post_session_validate",
+        "x-owner-service": "auth-service",
+        "x-allowed-callers": [
+          "clients-service",
+          "appointments-service",
+          "interventions-service",
+          "inventory-service",
+          "billing-service",
+          "accounting-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationRequest"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "web CSRF enforced for delegated mutating permission validation",
+          "company from verified header not body",
+          "AND of requested permissions",
+          "caller purpose/permission whitelist",
+          "response permissions equal requested set"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/client-vehicle-references": {
+      "post": {
+        "operationId": "clients_service_post_client-vehicle-references",
+        "x-owner-service": "clients-service",
+        "x-allowed-callers": [
+          "appointments-service",
+          "interventions-service",
+          "billing-service",
+          "accounting-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReferenceAck"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterReferences"
+              }
+            }
+          }
+        },
+        "x-reference-target-kinds": [
+          "client",
+          "vehicle"
+        ],
+        "x-invariants": [
+          "company-bound external reference; no reassignment",
+          "sourceService derived from verified certificate/caller, never request body",
+          "required permission set selected by verified source workflow and AND validated by Auth",
+          "shared local archive/registration lock; no network under SQL lock",
+          "ack must match exact request and owner service",
+          "no release/delete reference endpoint"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/appointment-references": {
+      "post": {
+        "operationId": "appointments_service_post_appointment-references",
+        "x-owner-service": "appointments-service",
+        "x-allowed-callers": [
+          "interventions-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReferenceAck"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterReferences"
+              }
+            }
+          }
+        },
+        "x-reference-target-kinds": [
+          "appointment"
+        ],
+        "x-invariants": [
+          "company-bound external reference; no reassignment",
+          "sourceService derived from verified certificate/caller, never request body",
+          "required permission set selected by verified source workflow and AND validated by Auth",
+          "shared local archive/registration lock; no network under SQL lock",
+          "ack must match exact request and owner service",
+          "no release/delete reference endpoint"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/intervention-references": {
+      "post": {
+        "operationId": "interventions_service_post_intervention-references",
+        "x-owner-service": "interventions-service",
+        "x-allowed-callers": [
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReferenceAck"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterReferences"
+              }
+            }
+          }
+        },
+        "x-reference-target-kinds": [
+          "intervention"
+        ],
+        "x-invariants": [
+          "company-bound external reference; no reassignment",
+          "sourceService derived from verified certificate/caller, never request body",
+          "required permission set selected by verified source workflow and AND validated by Auth",
+          "shared local archive/registration lock; no network under SQL lock",
+          "ack must match exact request and owner service",
+          "no release/delete reference endpoint"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/commercial-references": {
+      "post": {
+        "operationId": "billing_service_post_commercial-references",
+        "x-owner-service": "billing-service",
+        "x-allowed-callers": [
+          "interventions-service",
+          "inventory-service",
+          "accounting-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReferenceAck"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterReferences"
+              }
+            }
+          }
+        },
+        "x-reference-target-kinds": [
+          "workOrder",
+          "invoice"
+        ],
+        "x-invariants": [
+          "company-bound external reference; no reassignment",
+          "sourceService derived from verified certificate/caller, never request body",
+          "required permission set selected by verified source workflow and AND validated by Auth",
+          "shared local archive/registration lock; no network under SQL lock",
+          "ack must match exact request and owner service",
+          "no release/delete reference endpoint"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/client-vehicle-search": {
+      "get": {
+        "operationId": "clients_service_get_client-vehicle-search",
+        "x-owner-service": "clients-service",
+        "x-allowed-callers": [
+          "appointments-service",
+          "interventions-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReferenceSearchResult"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "only verified company identifiers including historical archived resources",
+          "1000 identifiers maximum per collection; too broad is 422 without truncation"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/stock-reservations": {
+      "post": {
+        "operationId": "inventory_service_post_stock-reservations",
+        "x-owner-service": "inventory-service",
+        "x-allowed-callers": [
+          "interventions-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StockReservation"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockReservationInput"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "source belongs to same company and allowed state",
+          "caller certificate matches sourceType authority",
+          "online initiating business permission AND inventory stock permission",
+          "idempotent local all-or-nothing effects",
+          "same reservation line cannot be consumed twice"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/stock-reservations/{id}/consume": {
+      "post": {
+        "operationId": "inventory_service_post_stock-reservations_id_consume",
+        "x-owner-service": "inventory-service",
+        "x-allowed-callers": [
+          "interventions-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StockReservation"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockEffectInput"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "source belongs to same company and allowed state",
+          "caller certificate matches sourceType authority",
+          "online initiating business permission AND inventory stock permission",
+          "idempotent local all-or-nothing effects",
+          "same reservation line cannot be consumed twice"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/stock-reservations/{id}/release": {
+      "post": {
+        "operationId": "inventory_service_post_stock-reservations_id_release",
+        "x-owner-service": "inventory-service",
+        "x-allowed-callers": [
+          "interventions-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/IfMatch"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StockReservation"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockEffectInput"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "source belongs to same company and allowed state",
+          "caller certificate matches sourceType authority",
+          "online initiating business permission AND inventory stock permission",
+          "idempotent local all-or-nothing effects",
+          "same reservation line cannot be consumed twice"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/tax-policies/current": {
+      "get": {
+        "operationId": "accounting_service_get_tax-policies_current",
+        "x-owner-service": "accounting-service",
+        "x-allowed-callers": [
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "documentDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TaxPolicy"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "whitelisted fiscal.policy.use capability; user billing.invoices.issue validated through Auth POST with CSRF",
+          "immutable applicable company policy version; no invented tax defaults"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/service-prices/current": {
+      "get": {
+        "operationId": "interventions_service_get_service-prices_current",
+        "x-owner-service": "interventions-service",
+        "x-allowed-callers": [
+          "appointments-service",
+          "billing-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ServicePrice"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "verified catalogue/pricing read or explicitly whitelisted originating business operation",
+          "no change to historical applied pricing"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/events": {
+      "post": {
+        "operationId": "accounting_service_post_events",
+        "x-owner-service": "accounting-service",
+        "x-allowed-callers": [
+          "billing-service",
+          "inventory-service"
+        ],
+        "x-authorization-mode": "committed-system-fact",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/EventReceipt"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessEvent"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "only committed event types in subscription allowlist",
+          "Idempotency-Key equals eventId",
+          "producer matches mTLS/HMAC caller",
+          "header company equals event company and existing trusted projection",
+          "atomic inbox, accounting effects and receipt; no new user delegation",
+          "unknown source or unordered revision pending/quarantined, never dropped"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ],
+        "x-accepted-event-types": [
+          "billing.invoice.issued.v1",
+          "billing.payment.recorded.v1",
+          "billing.credit_note.issued.v1",
+          "billing.refund.recorded.v1",
+          "inventory.movement.committed.v1"
+        ]
+      }
+    },
+    "/intervention-stock-intents/{id}": {
+      "get": {
+        "operationId": "intervention_stock_intent_facts",
+        "x-owner-service": "interventions-service",
+        "x-allowed-callers": [
+          "inventory-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StockIntent"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "current warehouse/technician stock permission is validated by Auth POST with CSRF",
+          "same company immutable intent and allowed remaining line quantities",
+          "no customer profile or commercial prices",
+          "original preparation is an audited business authorization, not a reusable user session"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/work-order-stock-intents/{id}": {
+      "get": {
+        "operationId": "work_order_stock_intent_facts",
+        "x-owner-service": "billing-service",
+        "x-allowed-callers": [
+          "inventory-service"
+        ],
+        "x-authorization-mode": "online-user-and-machine",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StockIntent"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "current warehouse/technician stock permission is validated by Auth POST with CSRF",
+          "same company immutable intent and allowed remaining line quantities",
+          "no customer profile or commercial prices",
+          "original preparation is an audited business authorization, not a reusable user session"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ]
+      }
+    },
+    "/execution-events": {
+      "post": {
+        "operationId": "billing_accept_execution_fact",
+        "x-owner-service": "billing-service",
+        "x-allowed-callers": [
+          "interventions-service"
+        ],
+        "x-authorization-mode": "committed-system-fact",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/EventReceipt"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessEvent"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "only committed event types in subscription allowlist",
+          "Idempotency-Key equals eventId",
+          "producer matches mTLS/HMAC caller",
+          "header company equals event company and existing trusted projection",
+          "atomic inbox, accounting effects and receipt; no new user delegation",
+          "unknown source or unordered revision pending/quarantined, never dropped"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ],
+        "x-accepted-event-types": [
+          "interventions.completed.v1"
+        ]
+      }
+    },
+    "/directory-events": {
+      "post": {
+        "operationId": "accept_company_directory_fact",
+        "x-owner-service": "clients-service",
+        "x-allowed-callers": [
+          "auth-service"
+        ],
+        "x-authorization-mode": "committed-system-fact",
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CompanyContext"
+          },
+          {
+            "$ref": "#/components/parameters/RequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceName"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          },
+          {
+            "$ref": "#/components/parameters/Nonce"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact company/request context required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/EventReceipt"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refused or unavailable; never implicitly authorize",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessEvent"
+              }
+            }
+          }
+        },
+        "x-invariants": [
+          "known trusted company projection only",
+          "never creates membership or grants permission",
+          "stale directory version ignored idempotently; next user operation still validates online Auth",
+          "unknown company quarantined until approved provisioning"
+        ],
+        "servers": [
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          },
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          },
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          },
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          },
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          },
+          {
+            "url": "https://api.example.invalid/api/internal/v2"
+          }
+        ],
+        "x-accepted-event-types": [
+          "identity.company.changed.v1"
+        ],
+        "x-owner-services": [
+          "clients-service",
+          "appointments-service",
+          "interventions-service",
+          "inventory-service",
+          "billing-service",
+          "accounting-service"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CompanyId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "SubjectId": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]{0,19}$",
+        "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+      },
+      "MoneyCents": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "QuantityUnits": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 9007199254740991,
+        "description": "Integer milli-units; fixed quantityScale=1000."
+      },
+      "CatalogId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 255,
+        "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9_]+$"
+              },
+              "messageKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "requestId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 0
+                }
+              }
+            },
+            "required": [
+              "code",
+              "messageKey",
+              "requestId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "TaxRatio": {
+        "type": "object",
+        "properties": {
+          "numerator": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "maxLength": 512
+          },
+          "denominator": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "numerator",
+          "denominator"
+        ],
+        "additionalProperties": false
+      },
+      "TaxPolicy": {
+        "type": "object",
+        "properties": {
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "supersedesPolicyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "gstRegistered": {
+            "type": "boolean"
+          },
+          "qstRegistered": {
+            "type": "boolean"
+          },
+          "gstNumber": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "qstNumber": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "gstRate": {
+            "$ref": "#/components/schemas/TaxRatio"
+          },
+          "qstRate": {
+            "$ref": "#/components/schemas/TaxRatio"
+          },
+          "roundingRule": {
+            "const": "legacy-commercial-v1"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "readOnly": true,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "archivedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdByUserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$",
+                "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "superseded"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "TaxPolicyInput": {
+        "type": "object",
+        "properties": {
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "supersedesPolicyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "gstRegistered": {
+            "type": "boolean"
+          },
+          "qstRegistered": {
+            "type": "boolean"
+          },
+          "gstNumber": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "qstNumber": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "gstRate": {
+            "$ref": "#/components/schemas/TaxRatio"
+          },
+          "qstRate": {
+            "$ref": "#/components/schemas/TaxRatio"
+          },
+          "roundingRule": {
+            "const": "legacy-commercial-v1"
+          }
+        },
+        "required": [
+          "effectiveFrom",
+          "gstRegistered",
+          "qstRegistered",
+          "gstNumber",
+          "qstNumber",
+          "gstRate",
+          "qstRate",
+          "roundingRule"
+        ],
+        "additionalProperties": false
+      },
+      "ServicePrice": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "hourly",
+              "estimate"
+            ]
+          },
+          "fixedPriceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hourlyRateCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimatedMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 525600
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "readOnly": true,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "archivedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdByUserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$",
+                "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ServicePriceInput": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "hourly",
+              "estimate"
+            ]
+          },
+          "fixedPriceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hourlyRateCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimatedMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 525600
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "serviceId",
+          "method",
+          "effectiveFrom"
+        ],
+        "additionalProperties": false
+      },
+      "StockLine": {
+        "type": "object",
+        "properties": {
+          "lineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+          },
+          "quantityUnits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Integer milli-units; fixed quantityScale=1000."
+          }
+        },
+        "required": [
+          "lineId",
+          "productId",
+          "locationId",
+          "quantityUnits"
+        ],
+        "additionalProperties": false
+      },
+      "StockReservationInput": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "intervention",
+              "workOrder"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockLine"
+            },
+            "minItems": 1
+          },
+          "stockIntentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "sourceType",
+          "sourceId",
+          "sourceVersion",
+          "lines",
+          "stockIntentId"
+        ],
+        "additionalProperties": false
+      },
+      "StockReservation": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "intervention",
+              "workOrder"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockLine"
+            },
+            "minItems": 1
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "readOnly": true,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "archivedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdByUserId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,19}$",
+                "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "reserved",
+              "partiallyConsumed",
+              "consumed",
+              "released",
+              "reconciliationRequired"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "StockEffectInput": {
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "reservationLineId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "quantityUnits": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "description": "Integer milli-units; fixed quantityScale=1000."
+                }
+              },
+              "required": [
+                "reservationLineId",
+                "quantityUnits"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "stockIntentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "lines",
+          "stockIntentId"
+        ],
+        "additionalProperties": false
+      },
+      "StockBalance": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+          },
+          "physicalUnits": {
+            "type": "integer"
+          },
+          "reservedUnits": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "availableUnits": {
+            "type": "integer"
+          },
+          "quantityScale": {
+            "const": 1000
+          }
+        },
+        "required": [
+          "companyId",
+          "productId",
+          "locationId",
+          "physicalUnits",
+          "reservedUnits",
+          "availableUnits",
+          "quantityScale"
+        ],
+        "additionalProperties": false
+      },
+      "StockMovement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "receipt",
+              "reservation",
+              "release",
+              "consumption",
+              "customerReturn",
+              "supplierReturn",
+              "positiveAdjustment",
+              "negativeAdjustment",
+              "correction",
+              "transferOut",
+              "transferIn"
+            ]
+          },
+          "quantityUnits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Integer milli-units; fixed quantityScale=1000."
+          },
+          "valueDeltaCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "productId",
+          "locationId",
+          "type",
+          "quantityUnits",
+          "sourceId",
+          "occurredAt"
+        ],
+        "additionalProperties": false,
+        "x-field-permissions": {
+          "valueDeltaCents": "inventory.valuation.read"
+        }
+      },
+      "ValidationRequest": {
+        "type": "object",
+        "properties": {
+          "requiredPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "identity.companies.read",
+                "identity.companies.manage",
+                "identity.members.read",
+                "identity.members.manage",
+                "identity.roles.assign",
+                "identity.owners.manage",
+                "identity.audit.read",
+                "clients.read",
+                "clients.write",
+                "clients.archive",
+                "clients.restore",
+                "vehicles.read",
+                "vehicles.write",
+                "vehicles.archive",
+                "vehicles.restore",
+                "appointments.read",
+                "appointments.write",
+                "appointments.cancel",
+                "appointments.archive",
+                "appointments.settings.manage",
+                "interventions.read",
+                "interventions.write",
+                "interventions.complete",
+                "interventions.cancel",
+                "interventions.catalog.read",
+                "interventions.catalog.manage",
+                "interventions.pricing.read",
+                "interventions.pricing.manage",
+                "inventory.read",
+                "inventory.catalog.manage",
+                "inventory.suppliers.manage",
+                "inventory.purchases.manage",
+                "inventory.receipts.record",
+                "inventory.returns.record",
+                "inventory.stock.adjust",
+                "inventory.stock.reserve",
+                "inventory.stock.consume",
+                "inventory.stock.release",
+                "inventory.valuation.read",
+                "billing.read",
+                "billing.estimates.write",
+                "billing.estimates.approve",
+                "billing.work_orders.write",
+                "billing.work_orders.authorize",
+                "billing.invoices.write",
+                "billing.invoices.issue",
+                "billing.payments.record",
+                "billing.credit_notes.issue",
+                "billing.refunds.record",
+                "billing.prices.override",
+                "billing.settings.manage",
+                "billing.drafts.archive",
+                "accounting.read",
+                "accounting.bills.write",
+                "accounting.bills.post",
+                "accounting.supplier_payments.record",
+                "accounting.journal.post",
+                "accounting.journal.reverse",
+                "accounting.periods.close",
+                "accounting.tax_policies.read",
+                "accounting.tax_policies.manage",
+                "accounting.reports.read",
+                "accounting.attachments.manage",
+                "accounting.mileage.write",
+                "accounting.treasury.manage"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 8,
+            "uniqueItems": true
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "resource.read",
+              "resource.write",
+              "relationship.registration",
+              "stock.command",
+              "fiscal.policy.use"
+            ]
+          }
+        },
+        "required": [
+          "requiredPermissions",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "ValidationResult": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": 2
+          },
+          "subject": {
+            "$ref": "#/components/schemas/SubjectId"
+          },
+          "companyId": {
+            "$ref": "#/components/schemas/CompanyId"
+          },
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorizationVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "identity.companies.read",
+                "identity.companies.manage",
+                "identity.members.read",
+                "identity.members.manage",
+                "identity.roles.assign",
+                "identity.owners.manage",
+                "identity.audit.read",
+                "clients.read",
+                "clients.write",
+                "clients.archive",
+                "clients.restore",
+                "vehicles.read",
+                "vehicles.write",
+                "vehicles.archive",
+                "vehicles.restore",
+                "appointments.read",
+                "appointments.write",
+                "appointments.cancel",
+                "appointments.archive",
+                "appointments.settings.manage",
+                "interventions.read",
+                "interventions.write",
+                "interventions.complete",
+                "interventions.cancel",
+                "interventions.catalog.read",
+                "interventions.catalog.manage",
+                "interventions.pricing.read",
+                "interventions.pricing.manage",
+                "inventory.read",
+                "inventory.catalog.manage",
+                "inventory.suppliers.manage",
+                "inventory.purchases.manage",
+                "inventory.receipts.record",
+                "inventory.returns.record",
+                "inventory.stock.adjust",
+                "inventory.stock.reserve",
+                "inventory.stock.consume",
+                "inventory.stock.release",
+                "inventory.valuation.read",
+                "billing.read",
+                "billing.estimates.write",
+                "billing.estimates.approve",
+                "billing.work_orders.write",
+                "billing.work_orders.authorize",
+                "billing.invoices.write",
+                "billing.invoices.issue",
+                "billing.payments.record",
+                "billing.credit_notes.issue",
+                "billing.refunds.record",
+                "billing.prices.override",
+                "billing.settings.manage",
+                "billing.drafts.archive",
+                "accounting.read",
+                "accounting.bills.write",
+                "accounting.bills.post",
+                "accounting.supplier_payments.record",
+                "accounting.journal.post",
+                "accounting.journal.reverse",
+                "accounting.periods.close",
+                "accounting.tax_policies.read",
+                "accounting.tax_policies.manage",
+                "accounting.reports.read",
+                "accounting.attachments.manage",
+                "accounting.mileage.write",
+                "accounting.treasury.manage"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allowed": {
+            "const": true
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "subject",
+          "companyId",
+          "membershipId",
+          "authorizationVersion",
+          "permissions",
+          "purpose",
+          "requestId",
+          "allowed"
+        ],
+        "additionalProperties": false
+      },
+      "ReferenceTarget": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "client",
+              "vehicle",
+              "appointment",
+              "intervention",
+              "workOrder",
+              "invoice"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "RegisterReferences": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "appointment",
+              "intervention",
+              "estimate",
+              "workOrder",
+              "invoice",
+              "trip"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReferenceTarget"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "sourceType",
+          "sourceId",
+          "sourceVersion",
+          "targets"
+        ],
+        "additionalProperties": false
+      },
+      "ReferenceAck": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": 2
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceService": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReferenceTarget"
+            },
+            "minItems": 1
+          },
+          "retained": {
+            "const": true
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "companyId",
+          "sourceService",
+          "sourceType",
+          "sourceId",
+          "sourceVersion",
+          "targets",
+          "retained",
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "ReferenceSearchResult": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": 2
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 0
+          },
+          "vehicleIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 0
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "companyId",
+          "clientIds",
+          "vehicleIds",
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "BusinessEvent": {
+        "$ref": "./lot-0-events.schema.json"
+      },
+      "EventReceipt": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "duplicate",
+              "pendingReconciliation"
+            ]
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "eventId",
+          "companyId",
+          "status",
+          "requestId"
+        ],
+        "additionalProperties": false
+      },
+      "StockIntentInput": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "reserve",
+              "consume",
+              "release"
+            ]
+          },
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/StockLine"
+            }
+          }
+        },
+        "required": [
+          "action",
+          "lines"
+        ],
+        "additionalProperties": false
+      },
+      "StockIntent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "intervention",
+              "workOrder"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "reserve",
+              "consume",
+              "release"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancellationRequested",
+              "cancelled",
+              "reconciliationRequired"
+            ]
+          },
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/StockLine"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "version",
+          "sourceType",
+          "sourceId",
+          "sourceVersion",
+          "action",
+          "status",
+          "lines"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "parameters": {
+      "CompanyContext": {
+        "name": "X-Company-ID",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/CompanyId"
+        },
+        "description": "Untrusted selector. Auth session, active membership and permissions MUST validate this exact company; never an authorization proof."
+      },
+      "RequestId": {
+        "name": "X-Request-ID",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "description": "Gateway validates or replaces; response echoes the effective UUID."
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        }
+      },
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^\"v[1-9][0-9]*\"$"
+        },
+        "example": "\"v7\""
+      },
+      "ServiceName": {
+        "name": "X-Internal-Service",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z]+-service$"
+        }
+      },
+      "Timestamp": {
+        "name": "X-Internal-Timestamp",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      },
+      "Nonce": {
+        "name": "X-Internal-Nonce",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{20,80}$"
+        }
+      }
+    },
+    "securitySchemes": {
+      "BrowserSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "vicartech-auth-session"
+      },
+      "BrowserCsrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-XSRF-TOKEN"
+      },
+      "MutualTLS": {
+        "type": "mutualTLS"
+      },
+      "MachineSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Signature"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Install as a reviewed systemd drop-in for php8.3-fpm.service.
+# This is a resource guardrail, not proof that seven busy Laravel pools fit.
+[Service]
+MemoryHigh=400M
+MemoryMax=500M
+TasksMax=12

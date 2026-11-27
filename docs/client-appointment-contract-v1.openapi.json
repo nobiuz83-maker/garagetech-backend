@@ -1,0 +1,323 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ViCarTech client/appointment relationship contract",
+    "version": "1.0.0",
+    "description": "Internal only. HMAC key is specific to this relationship, distinct from Auth signing keys. Canonical bytes: METHOD + newline + raw request target with query + newline + Unix timestamp + newline + nonce + newline + SHA256(raw body). Clock skew <=30 seconds, nonce retention 90 seconds, shared receiver database nonce cache. POST reserves a permanent historical reference before Appointments commits its own transaction; registration and archival share the Clients parent row lock. A lost reply or failed booking may leave a conservative reservation. There is deliberately no automatic release/delete endpoint."
+  },
+  "servers": [
+    {
+      "url": "https://clients-service:8443/api/internal/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "MutualTLS": {
+        "type": "mutualTLS"
+      },
+      "MachineSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Signature"
+      },
+      "BrowserSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "vicartech-auth-session"
+      },
+      "BrowserCsrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-XSRF-TOKEN"
+      }
+    }
+  },
+  "paths": {
+    "/appointment-references": {
+      "post": {
+        "operationId": "retainAppointmentReference",
+        "parameters": [
+          {
+            "name": "X-Internal-Service",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^appointments-service$"
+            }
+          },
+          {
+            "name": "X-Internal-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          },
+          {
+            "name": "X-Internal-Nonce",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{20,80}$"
+            }
+          },
+          {
+            "name": "X-Internal-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": [],
+            "BrowserCsrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "appointmentId",
+                  "clientId",
+                  "vehicleId"
+                ],
+                "properties": {
+                  "appointmentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "clientId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "vehicleId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current verified owner; Cache-Control no-store; distinct allowed Set-Cookie headers may be relayed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schemaVersion",
+                        "appointmentId",
+                        "clientId",
+                        "vehicleId",
+                        "ownerSubjectId",
+                        "retained"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": 1
+                        },
+                        "appointmentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "clientId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "vehicleId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "ownerSubjectId": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]{0,19}$"
+                        },
+                        "retained": {
+                          "const": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid machine proof/replay or absent browser session; callers distinguish machine failures from session expiry"
+          },
+          "403": {
+            "description": "Insufficient user permission"
+          },
+          "409": {
+            "description": "Appointment UUID already bound to a different owner"
+          },
+          "419": {
+            "description": "Missing/invalid write CSRF"
+          },
+          "422": {
+            "description": "Invalid or archived client/vehicle, mismatched relationship, invalid input or search too broad"
+          },
+          "503": {
+            "description": "Dependency, storage or invalid upstream response; always fail closed"
+          }
+        },
+        "description": "Idempotent by appointment/client/vehicle tuple. The owner comes exclusively from verified Auth session. Clients and vehicles must be active and owned by that subject. References remain after cancellation/soft archival. No network call occurs while holding the Clients resource lock."
+      }
+    },
+    "/client-vehicle-search": {
+      "get": {
+        "operationId": "searchOwnedResourceIdentifiers",
+        "parameters": [
+          {
+            "name": "X-Internal-Service",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^appointments-service$"
+            }
+          },
+          {
+            "name": "X-Internal-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          },
+          {
+            "name": "X-Internal-Nonce",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{20,80}$"
+            }
+          },
+          {
+            "name": "X-Internal-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "security": [
+          {
+            "MutualTLS": [],
+            "MachineSignature": [],
+            "BrowserSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current verified owner; Cache-Control no-store; distinct allowed Set-Cookie headers may be relayed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schemaVersion",
+                        "ownerSubjectId",
+                        "clientIds",
+                        "vehicleIds"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": 1
+                        },
+                        "ownerSubjectId": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]{0,19}$"
+                        },
+                        "clientIds": {
+                          "type": "array",
+                          "maxItems": 1000,
+                          "items": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "vehicleIds": {
+                          "type": "array",
+                          "maxItems": 1000,
+                          "items": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid machine proof/replay or absent browser session; callers distinguish machine failures from session expiry"
+          },
+          "403": {
+            "description": "Insufficient user permission"
+          },
+          "409": {
+            "description": "Appointment UUID already bound to a different owner"
+          },
+          "419": {
+            "description": "Missing/invalid write CSRF"
+          },
+          "422": {
+            "description": "Invalid or archived client/vehicle, mismatched relationship, invalid input or search too broad"
+          },
+          "503": {
+            "description": "Dependency, storage or invalid upstream response; always fail closed"
+          }
+        },
+        "description": "Only opaque identifiers, scoped to the verified user. Does not copy names or profiles into Appointments. More than 1000 matches yields 422 rather than truncating results. Includes owned archived clients and vehicles so historical appointment searches retain their meaning. New reference registration still requires active resources."
+      }
+    }
+  }
+}

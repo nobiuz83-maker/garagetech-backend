@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+ARG RUNTIME_IMAGE
+FROM ${RUNTIME_IMAGE}
+
+ARG SERVICE_NAME
+USER root
+WORKDIR /var/www/html
+
+# The production image is built from the backend repository root so that all
+# seven services use the same reviewed Laravel runtime and dependency layer.
+COPY --chown=1000:1000 services/${SERVICE_NAME}/ /var/www/html/
+
+RUN set -eu; \
+    a2enmod ssl; \
+    if [ -f /var/www/html/docker/http-apache.conf ]; then \
+        a2enmod ssl; \
+        cp /var/www/html/docker/http-apache.conf /etc/apache2/sites-enabled/000-default.conf; \
+    fi; \
+    if [ -f /var/www/html/docker/internal-apache.conf ]; then \
+        cp /var/www/html/docker/internal-apache.conf /etc/apache2/sites-enabled/001-internal.conf; \
+    fi; \
+    cp /var/www/html/docker/entrypoint.sh /usr/local/bin/vicartech-service-entrypoint; \
+    chmod 0755 /usr/local/bin/vicartech-service-entrypoint; \
+    printf 'ServerLimit 2\nStartServers 2\nMinSpareServers 1\nMaxSpareServers 2\nMaxRequestWorkers 6\nMaxConnectionsPerChild 1000\n' > /etc/apache2/mods-available/mpm_prefork.conf; \
+    composer dump-autoload --no-dev --classmap-authoritative --no-scripts --no-interaction; \
+    chown -R 1000:1000 /tmp/apache2 /tmp/apache2-lock /var/www/html
+
+USER 1000:1000
+EXPOSE 8080 8443
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s CMD curl --fail --silent http://127.0.0.1:8080/api/health > /dev/null || exit 1
+ENTRYPOINT ["/usr/local/bin/vicartech-service-entrypoint"]
+CMD ["apache2-foreground"]

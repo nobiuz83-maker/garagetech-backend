@@ -1,0 +1,17 @@
+[Unit]
+Description=Run ViCarTech Laravel scheduled tasks
+After=mariadb.service network.target
+
+[Service]
+Type=oneshot
+User=vicartech-appointments
+Group=vicartech-appointments
+WorkingDirectory=/srv/vicartech/current/services/appointments-service
+EnvironmentFile=/etc/vicartech/services/appointments.env
+ExecStart=/usr/bin/php artisan schedule:run --no-interaction
+MemoryMax=96M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/vicartech/current/services/appointments-service/storage

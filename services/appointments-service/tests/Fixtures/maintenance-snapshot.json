@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "migrationId": "0fba9082-745c-46a7-8a0a-d8a711e76bad",
+  "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "referenceDigest": "91eeca3f00fcea7c8c9411b389e21cd6b443140b54f9afa263505fccaa8acfd2",
+  "ownerSubjects": [
+    "17"
+  ],
+  "domain": "appointments",
+  "tables": {
+    "client_vehicle_associations": [
+      {
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "user_id": "17"
+      }
+    ],
+    "appointments": [
+      {
+        "id": "e0d84c1c-8742-47bb-9f2c-cf7193f93d55",
+        "user_id": "17",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "date": "2027-01-08",
+        "start_time": "10:00:00",
+        "end_time": "11:00:00",
+        "status": "cancelled",
+        "service_type": "Test",
+        "description": "Fictional",
+        "notes": "",
+        "data": {
+          "schemaVersion": 1
+        },
+        "version": 4,
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": "2025-04-04 05:06:07"
+      },
+      {
+        "id": "da77958f-a112-48fe-8ddc-08c2a298663a",
+        "user_id": "17",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "date": "2027-01-08",
+        "start_time": "10:00:00",
+        "end_time": "11:00:00",
+        "status": "scheduled",
+        "service_type": "Test",
+        "description": "Fictional",
+        "notes": "",
+        "data": {
+          "schemaVersion": 1
+        },
+        "version": 4,
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": null
+      },
+      {
+        "id": "bed24d3d-999f-4b5c-abd5-17bfd4d1b2ac",
+        "user_id": "17",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "date": "2027-01-08",
+        "start_time": "10:00:00",
+        "end_time": "11:00:00",
+        "status": "completed",
+        "service_type": "Test",
+        "description": "Fictional",
+        "notes": "",
+        "data": {
+          "schemaVersion": 1
+        },
+        "version": 4,
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": null
+      }
+    ],
+    "appointment_schedules": [
+      {
+        "id": "29",
+        "user_id": "17",
+        "data": {
+          "schemaVersion": 1,
+          "legacyUnknown": {
+            "empty": {}
+          }
+        },
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456"
+      }
+    ]
+  }
+}

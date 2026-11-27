@@ -1,0 +1,363 @@
+name: vicartech-microservices-stage1
+services:
+  database:
+    image: mariadb:10.6.28-ubi9
+    user: "0:0"
+    environment:
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/stage1_root_password
+    secrets: [stage1_root_password]
+    volumes:
+      - stage1_database_data:/var/lib/mysql
+    networks: [stage1_data]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+  gateway:
+    user: "1000:1000"
+    profiles: [gateway]
+    build:
+      context: ./gateway
+    image: vicartech-microservices-gateway:stage2b
+    pull_policy: never
+    secrets:
+      - internal_ca_cert
+      - gateway_client_cert
+      - gateway_client_key
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  auth-service:
+    user: "1000:1000"
+    profiles: [auth]
+    build:
+      context: ./services/auth-service
+    image: vicartech-auth-service:stage2a
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Auth Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: auth_db
+      DB_USERNAME: vicartech_auth_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: database
+      SESSION_COOKIE: vicartech-auth-session
+      SESSION_DOMAIN: "null"
+      SESSION_PATH: /
+      SESSION_SECURE_COOKIE: "false"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+      SANCTUM_STATEFUL_DOMAINS: localhost:5173,localhost:8080,gateway:8080
+      FRONTEND_URL: http://localhost:5173
+      CACHE_STORE: database
+      INTERNAL_AUTH_CLIENTS_KEY_FILE: /run/secrets/internal_clients_key
+      INTERNAL_AUTH_APPOINTMENTS_KEY_FILE: /run/secrets/internal_appointments_key
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    secrets:
+      - source: auth_app_key
+        target: app_key
+      - source: auth_db_password
+        target: db_password
+      - source: internal_clients_key
+        target: internal_clients_key
+      - source: internal_appointments_key
+        target: internal_appointments_key
+      - source: internal_ca_cert
+        target: internal_ca_cert
+      - source: auth_server_cert
+        target: auth_server_cert
+      - source: auth_server_key
+        target: auth_server_key
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  clients-service:
+    user: "1000:1000"
+    profiles: [clients]
+    build:
+      context: ./services/clients-service
+    image: vicartech-clients-service:stage2b
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Clients Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_clients
+      DB_USERNAME: vicartech_clients_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+      AUTH_SERVICE_URL: https://auth-service:8443
+      AUTH_CA_CERTIFICATE_FILE: /run/secrets/auth_ca_cert
+      AUTH_CLIENT_CERTIFICATE_FILE: /run/secrets/auth_client_cert
+      AUTH_CLIENT_KEY_FILE: /run/secrets/auth_client_key
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth_signing_key
+    secrets:
+      - source: clients_app_key
+        target: app_key
+      - source: clients_db_password
+        target: db_password
+      - source: internal_ca_cert
+        target: auth_ca_cert
+      - source: clients_internal_cert
+        target: auth_client_cert
+      - source: clients_internal_key
+        target: auth_client_key
+      - source: clients_internal_signing_key
+        target: auth_signing_key
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  appointments-service:
+    user: "1000:1000"
+    profiles: [appointments]
+    build:
+      context: ./services/appointments-service
+    image: vicartech-appointments-service:stage2b
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Appointments Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_appointments
+      DB_USERNAME: vicartech_appointments_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+      AUTH_SERVICE_URL: https://auth-service:8443
+      AUTH_CA_CERTIFICATE_FILE: /run/secrets/auth_ca_cert
+      AUTH_CLIENT_CERTIFICATE_FILE: /run/secrets/auth_client_cert
+      AUTH_CLIENT_KEY_FILE: /run/secrets/auth_client_key
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth_signing_key
+    secrets:
+      - source: appointments_app_key
+        target: app_key
+      - source: appointments_db_password
+        target: db_password
+      - source: internal_ca_cert
+        target: auth_ca_cert
+      - source: appointments_internal_cert
+        target: auth_client_cert
+      - source: appointments_internal_key
+        target: auth_client_key
+      - source: appointments_internal_signing_key
+        target: auth_signing_key
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  interventions-service:
+    user: "1000:1000"
+    profiles: [interventions]
+    build:
+      context: ./services/interventions-service
+    image: vicartech-interventions-service:stage1
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Interventions Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_interventions
+      DB_USERNAME: vicartech_interventions_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    secrets:
+      - source: interventions_app_key
+        target: app_key
+      - source: interventions_db_password
+        target: db_password
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  inventory-service:
+    user: "1000:1000"
+    profiles: [inventory]
+    build:
+      context: ./services/inventory-service
+    image: vicartech-inventory-service:stage1
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Inventory Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_inventory
+      DB_USERNAME: vicartech_inventory_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    secrets:
+      - source: inventory_app_key
+        target: app_key
+      - source: inventory_db_password
+        target: db_password
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  billing-service:
+    user: "1000:1000"
+    profiles: [billing]
+    build:
+      context: ./services/billing-service
+    image: vicartech-billing-service:stage1
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Billing Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_billing
+      DB_USERNAME: vicartech_billing_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    secrets:
+      - source: billing_app_key
+        target: app_key
+      - source: billing_db_password
+        target: db_password
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+  accounting-service:
+    user: "1000:1000"
+    profiles: [accounting]
+    build:
+      context: ./services/accounting-service
+    image: vicartech-accounting-service:stage1
+    pull_policy: never
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_NAME: ViCarTech Accounting Service
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY_FILE: /run/secrets/app_key
+      DB_CONNECTION: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_DATABASE: vicartech_accounting
+      DB_USERNAME: vicartech_accounting_app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stderr
+    secrets:
+      - source: accounting_app_key
+        target: app_key
+      - source: accounting_db_password
+        target: db_password
+    networks: [stage1_data]
+    security_opt: ["no-new-privileges:true"]
+networks:
+  stage1_data:
+    internal: true
+volumes:
+  stage1_database_data:
+    name: vicartech_microservices_stage1_data
+secrets:
+  stage1_root_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/root-password
+  auth_app_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/auth-app-key
+  auth_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/auth-db-password
+  clients_app_key:
+    file: ${AUTH_STAGE2B_SECRETS_DIR:?Set private Stage 2B secrets directory}/clients-app-key
+  clients_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/clients-db-password
+  appointments_app_key:
+    file: ${AUTH_STAGE2B_SECRETS_DIR:?Set private Stage 2B secrets directory}/appointments-app-key
+  appointments_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/appointments-db-password
+  interventions_app_key:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/interventions-app-key
+  interventions_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/interventions-db-password
+  inventory_app_key:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/inventory-app-key
+  inventory_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/inventory-db-password
+  billing_app_key:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/billing-app-key
+  billing_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/billing-db-password
+  accounting_app_key:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/accounting-app-key
+  accounting_db_password:
+    file: ${STAGE1_SECRETS_DIR:?Set a private secrets directory}/accounting-db-password
+  internal_clients_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/clients-signing-key
+  internal_appointments_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/appointments-signing-key
+  internal_ca_cert:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/internal-ca.crt
+  auth_server_cert:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/auth-server.crt
+  auth_server_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/auth-server.key
+  clients_internal_cert:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/clients-client.crt
+  clients_internal_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/clients-client.key
+  clients_internal_signing_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/clients-signing-key
+  appointments_internal_cert:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/appointments-client.crt
+  appointments_internal_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/appointments-client.key
+  appointments_internal_signing_key:
+    file: ${AUTH_STAGE2A_SECRETS_DIR:?Set private Auth secrets directory}/appointments-signing-key
+  gateway_client_cert:
+    file: ${AUTH_STAGE2B_SECRETS_DIR:?Set private Stage 2B secrets directory}/gateway-client.crt
+  gateway_client_key:
+    file: ${AUTH_STAGE2B_SECRETS_DIR:?Set private Stage 2B secrets directory}/gateway-client.key

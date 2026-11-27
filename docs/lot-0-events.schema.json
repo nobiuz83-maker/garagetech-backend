@@ -1,0 +1,857 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ViCarTech committed business facts — LOT 0 design only",
+  "description": "No cookies, tokens, passwords, hashes, arbitrary metadata or caller-supplied cross-company authority. Payload validated against one exact event type. Resource/company consistency remains a transactional policy.",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "billing-service"
+        },
+        "type": {
+          "const": "billing.invoice.issued.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "invoiceId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "documentNumber": {
+              "type": "string",
+              "minLength": 1
+            },
+            "documentDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "taxPolicyId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "taxPolicyVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "subtotalCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "discountCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "gstCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qstCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "totalCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "invoiceId",
+            "documentNumber",
+            "documentDate",
+            "taxPolicyId",
+            "taxPolicyVersion",
+            "subtotalCents",
+            "discountCents",
+            "gstCents",
+            "qstCents",
+            "totalCents"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "billing.invoice.issued.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "billing-service"
+        },
+        "type": {
+          "const": "billing.payment.recorded.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "paymentId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "invoiceId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "amountCents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "cash",
+                "debit",
+                "credit",
+                "interac",
+                "bank",
+                "cheque",
+                "other"
+              ]
+            },
+            "reference": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "paymentId",
+            "invoiceId",
+            "date",
+            "amountCents",
+            "method",
+            "reference"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "billing.payment.recorded.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "billing-service"
+        },
+        "type": {
+          "const": "billing.credit_note.issued.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "creditNoteId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "invoiceId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "netCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "gstCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "qstCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "totalCents": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "creditNoteId",
+            "invoiceId",
+            "date",
+            "netCents",
+            "gstCents",
+            "qstCents",
+            "totalCents"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "billing.credit_note.issued.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "billing-service"
+        },
+        "type": {
+          "const": "billing.refund.recorded.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "refundId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "paymentId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "creditNoteId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "amountCents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "reference": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "refundId",
+            "paymentId",
+            "creditNoteId",
+            "date",
+            "amountCents",
+            "reference"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "billing.refund.recorded.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "inventory-service"
+        },
+        "type": {
+          "const": "inventory.movement.committed.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "movementId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "productId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "locationId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Stable historical catalogue/account/location identifier; UUIDs are valid but not forced."
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "receipt",
+                "consumption",
+                "customerReturn",
+                "supplierReturn",
+                "positiveAdjustment",
+                "negativeAdjustment",
+                "correction"
+              ]
+            },
+            "quantityDeltaUnits": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "valueDeltaCents": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "currency": {
+              "const": "CAD"
+            },
+            "sourceId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "movementId",
+            "productId",
+            "locationId",
+            "type",
+            "quantityDeltaUnits",
+            "valueDeltaCents",
+            "currency",
+            "sourceId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "inventory.movement.committed.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "interventions-service"
+        },
+        "type": {
+          "const": "interventions.completed.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "interventionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "workOrderId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "actualMinutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stockMovementIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "minItems": 0
+            },
+            "executionSnapshotVersion": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "interventionId",
+            "workOrderId",
+            "actualMinutes",
+            "stockMovementIds",
+            "executionSnapshotVersion"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "interventions.completed.v1"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "eventId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "companyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "producer": {
+          "const": "auth-service"
+        },
+        "type": {
+          "const": "identity.company.changed.v1"
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "causationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actorSubjectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$",
+              "description": "Existing unsigned BIGINT identity serialized as a string; maximum 18446744073709551615."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "companyId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "directoryVersion": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspended"
+              ]
+            }
+          },
+          "required": [
+            "companyId",
+            "directoryVersion",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "eventId",
+        "companyId",
+        "producer",
+        "type",
+        "aggregateId",
+        "aggregateVersion",
+        "occurredAt",
+        "requestId",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "title": "identity.company.changed.v1"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+secrets/
+backups/
+releases/
+frontend/
+storage/
+*.key
+*.pem
+*.crt
+*.age
+*.sql
+*.sql.gz
+*.dump
+*.log

@@ -1,0 +1,16 @@
+[Unit]
+Description=Create and upload an encrypted ViCarTech production backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=vicartech
+Group=vicartech
+Environment=PRODUCTION_ROOT=/opt/vicartech
+ExecStart=/opt/vicartech/deployment/infrastructure/production/backup.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/vicartech/backups /opt/vicartech
+ProtectHome=true

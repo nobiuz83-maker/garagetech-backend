@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "migrationId": "0fba9082-745c-46a7-8a0a-d8a711e76bad",
+  "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "referenceDigest": "91eeca3f00fcea7c8c9411b389e21cd6b443140b54f9afa263505fccaa8acfd2",
+  "ownerSubjects": [
+    "17"
+  ],
+  "domain": "clients",
+  "tables": {
+    "clients": [
+      {
+        "id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "user_id": "17",
+        "first_name": "Fictional",
+        "last_name": "Migration",
+        "phone": "",
+        "email": "",
+        "data": {
+          "schemaVersion": 1,
+          "additionalInformation": {
+            "historicalOptional": null
+          },
+          "address": {
+            "city": "Test"
+          }
+        },
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": "2025-03-04 05:06:07"
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "make": "Test",
+        "model": "Model",
+        "year": 2020,
+        "vin": "",
+        "license_plate": "",
+        "data": {
+          "schemaVersion": 1,
+          "unknownLegacyObject": {
+            "items": [
+              null,
+              false,
+              3
+            ]
+          },
+          "preservedTypes": {
+            "object": {},
+            "array": [],
+            "fraction": 0.0,
+            "boolean": false,
+            "null": null
+          }
+        },
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": "2025-03-04 05:06:07"
+      },
+      {
+        "id": "834047c2-2f04-47f6-940f-f6611472cc9c",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "make": "Test",
+        "model": "Independently archived synthetic vehicle",
+        "year": 2020,
+        "vin": "",
+        "license_plate": "",
+        "data": {
+          "schemaVersion": 1,
+          "unknownLegacyObject": {
+            "items": [
+              null,
+              false,
+              3
+            ]
+          },
+          "preservedTypes": {
+            "object": {},
+            "array": [],
+            "fraction": 0.0,
+            "boolean": false,
+            "null": null
+          }
+        },
+        "created_at": "2024-01-02 03:04:05.123",
+        "updated_at": "2025-02-03 04:05:06.456",
+        "deleted_at": "2025-01-05 00:00:00"
+      }
+    ],
+    "appointment_subjects": [
+      {
+        "appointment_id": "e0d84c1c-8742-47bb-9f2c-cf7193f93d55",
+        "owner_subject_id": "17"
+      },
+      {
+        "appointment_id": "da77958f-a112-48fe-8ddc-08c2a298663a",
+        "owner_subject_id": "17"
+      },
+      {
+        "appointment_id": "bed24d3d-999f-4b5c-abd5-17bfd4d1b2ac",
+        "owner_subject_id": "17"
+      }
+    ],
+    "appointment_references": [
+      {
+        "appointment_id": "e0d84c1c-8742-47bb-9f2c-cf7193f93d55",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "owner_subject_id": "17",
+        "recorded_at": "2026-11-14 08:00:00.000"
+      },
+      {
+        "appointment_id": "da77958f-a112-48fe-8ddc-08c2a298663a",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "owner_subject_id": "17",
+        "recorded_at": "2026-11-14 08:00:00.000"
+      },
+      {
+        "appointment_id": "bed24d3d-999f-4b5c-abd5-17bfd4d1b2ac",
+        "client_id": "f534a217-52d8-4726-b168-4afc252d0751",
+        "vehicle_id": "85ba1de1-87f8-4271-a1b2-dd554e22f66b",
+        "owner_subject_id": "17",
+        "recorded_at": "2026-11-14 08:00:00.000"
+      }
+    ]
+  }
+}
